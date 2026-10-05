@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Eye,
@@ -12,19 +13,71 @@ import {
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
 
+import { authClient } from "@/lib/auth-client";
+
 const LOGIN_IMAGE = "/login-image.png";
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (event) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // Better Auth login will be connected later.
+    setErrorMessage("");
+    setIsLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrorMessage(
+          error.message || "Unable to sign in. Please check your details."
+        );
+        return;
+      }
+
+      if (data) {
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+
+      setErrorMessage(
+        "Something went wrong while signing in. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    // Google OAuth will be connected later.
+  const handleGoogleLogin = async () => {
+    setErrorMessage("");
+
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "http://localhost:3000/dashboard",
+      });
+    } catch (error) {
+      console.error("Google login error:", error);
+
+      setErrorMessage(
+        "Google sign in could not be started. Please try again."
+      );
+    }
   };
 
   return (
@@ -59,6 +112,7 @@ export default function LoginPage() {
               </p>
             </div>
 
+            {/* Google Login */}
             <button
               type="button"
               onClick={handleGoogleLogin}
@@ -68,6 +122,7 @@ export default function LoginPage() {
               Continue with Google
             </button>
 
+            {/* Divider */}
             <div className="my-7 flex items-center gap-4">
               <div className="h-px flex-1 bg-white/10" />
 
@@ -78,6 +133,14 @@ export default function LoginPage() {
               <div className="h-px flex-1 bg-white/10" />
             </div>
 
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                {errorMessage}
+              </div>
+            )}
+
+            {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label
@@ -160,10 +223,12 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90"
+                disabled={isLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Sign In
-                <ArrowRight size={17} />
+                {isLoading ? "Signing In..." : "Sign In"}
+
+                {!isLoading && <ArrowRight size={17} />}
               </button>
             </form>
 
@@ -190,7 +255,6 @@ export default function LoginPage() {
             className="object-cover object-top"
           />
 
-          {/* Soft cinematic overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#07111f]/95 via-[#07111f]/20 to-black/5" />
 
           <div className="absolute inset-x-0 bottom-0 p-10 xl:p-12">
