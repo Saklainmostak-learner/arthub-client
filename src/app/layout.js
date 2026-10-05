@@ -1,5 +1,6 @@
 import Navbar from "@/components/shared/Navbar";
 import "./globals.css";
+import Footer from "@/components/shared/Footer";
 
 export const metadata = {
   title: "ArtHub",
@@ -11,7 +12,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <Navbar/>
-        {children}</body>
+        {children}
+        <Footer/>
+        </body>
     </html>
   );
 }
