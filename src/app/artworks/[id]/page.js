@@ -1,137 +1,137 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
+  Loader2,
   Palette,
   ShoppingBag,
-  UserRound,
+  User,
 } from "lucide-react";
 
-const artworks = [
-  {
-    id: "1",
-    title: "Golden Horizon",
-    artist: "Arian Khan",
-    artistEmail: "arian@example.com",
-    price: 120,
-    category: "Painting",
-    image: "/featured/artwork-1.png",
-    uploadedAt: "October 6, 2026",
-    description:
-      "Golden Horizon captures the quiet warmth of an evening landscape through expressive color and layered brushwork. The piece is designed to bring a calm, luminous presence into a modern interior.",
-  },
-  {
-    id: "2",
-    title: "Bloom Within",
-    artist: "Sara Ahmed",
-    artistEmail: "sara@example.com",
-    price: 200,
-    category: "Painting",
-    image: "/featured/artwork-2.png",
-    uploadedAt: "October 5, 2026",
-    description:
-      "Bloom Within explores softness, identity, and growth through a floral portrait composition. Detailed textures and muted natural tones give the artwork an elegant gallery-inspired character.",
-  },
-  {
-    id: "3",
-    title: "Urban Rhythm",
-    artist: "Fahim Rahman",
-    artistEmail: "fahim@example.com",
-    price: 150,
-    category: "Digital Art",
-    image: "/featured/artwork-3.png",
-    uploadedAt: "October 4, 2026",
-    description:
-      "Urban Rhythm reflects the energy of a rainy city night, combining vivid reflections, dramatic lighting, and a cinematic atmosphere inspired by life after dark.",
-  },
-  {
-    id: "4",
-    title: "Silent Retreat",
-    artist: "Nabila Noor",
-    artistEmail: "nabila@example.com",
-    price: 180,
-    category: "Painting",
-    image: "/featured/artwork-4.png",
-    uploadedAt: "October 3, 2026",
-    description:
-      "Silent Retreat is an expressive portrait built from layered shapes, textured color, and quiet emotion. The work balances modern abstraction with a strong human presence.",
-  },
-  {
-    id: "5",
-    title: "Curious Soul",
-    artist: "Tanvir Hasan",
-    artistEmail: "tanvir@example.com",
-    price: 100,
-    category: "Digital Art",
-    image: "/featured/artwork-5.png",
-    uploadedAt: "October 2, 2026",
-    description:
-      "Curious Soul draws inspiration from untouched forests and flowing water. Rich greens, warm sunlight, and intricate natural details create a peaceful sense of discovery.",
-  },
-  {
-    id: "6",
-    title: "Color Beyond",
-    artist: "Maya Sen",
-    artistEmail: "maya@example.com",
-    price: 220,
-    category: "Mixed Media",
-    image: "/featured/artwork-6.png",
-    uploadedAt: "October 1, 2026",
-    description:
-      "Color Beyond celebrates movement and imagination through bold abstract forms. Strong orange, teal, blue, and neutral tones create a vibrant composition with contemporary energy.",
-  },
-];
+export default function ArtworkDetailsPage() {
+  const params = useParams();
+  const id = params?.id;
 
-export default async function ArtworkDetailsPage({ params }) {
-  const { id } = await params;
+  const [artwork, setArtwork] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const artwork = artworks.find((item) => item.id === id);
+  useEffect(() => {
+    if (!id) return;
 
-  if (!artwork) {
+    const loadArtwork = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage("");
+
+        const response = await fetch(
+          `http://localhost:5000/artworks/${id}`,
+          {
+            cache: "no-store",
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message || "Failed to load artwork."
+          );
+        }
+
+        setArtwork(result.data);
+      } catch (error) {
+        console.error("Failed to fetch artwork:", error);
+
+        setErrorMessage(
+          error.message ||
+            "Unable to load this artwork."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadArtwork();
+  }, [id]);
+
+  if (isLoading) {
     return (
-      <main className="min-h-screen bg-[#07111f] px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto flex min-h-[500px] max-w-3xl flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 bg-white/[0.03] px-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F97316]/10 text-[#F97316]">
-            <Palette size={28} />
-          </div>
-
-          <h1 className="mt-6 text-3xl font-bold text-white">
-            Artwork not found
-          </h1>
-
-          <p className="mt-3 max-w-md text-sm leading-6 text-slate-400">
-            The artwork you are looking for may have been removed or the link
-            may be incorrect.
-          </p>
-
-          <Link
-            href="/artworks"
-            className="mt-7 rounded-full bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-          >
-            Browse Artworks
-          </Link>
+      <main className="flex min-h-screen items-center justify-center bg-[#07111f] px-4">
+        <div className="flex items-center gap-3 text-slate-400">
+          <Loader2
+            size={22}
+            className="animate-spin text-[#F97316]"
+          />
+          Loading artwork...
         </div>
       </main>
     );
   }
 
+  if (errorMessage || !artwork) {
+    return (
+      <main className="min-h-screen bg-[#07111f] px-4 py-16 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl">
+          <div className="rounded-3xl border border-white/10 bg-[#0b1625] p-8 text-center sm:p-12">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F97316]/10 text-[#F97316]">
+              <Palette size={25} />
+            </div>
+
+            <h1 className="mt-5 text-2xl font-bold">
+              Artwork not found
+            </h1>
+
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              {errorMessage ||
+                "The artwork you are looking for could not be found."}
+            </p>
+
+            <Link
+              href="/artworks"
+              className="mt-7 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-6 py-3 text-sm font-semibold text-white"
+            >
+              <ArrowLeft size={17} />
+              Browse Artworks
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const uploadedDate = artwork.createdAt
+    ? new Date(artwork.createdAt).toLocaleDateString(
+        "en-US",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }
+      )
+    : "Unknown";
+
   return (
-    <main className="min-h-screen bg-[#07111f] px-4 py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#07111f] px-4 py-10 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* Back Link */}
+        {/* Back */}
         <Link
           href="/artworks"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
+          className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
         >
           <ArrowLeft size={17} />
           Back to Artworks
         </Link>
 
-        {/* Details */}
-        <section className="mt-8 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+        {/* Main Content */}
+        <div className="mt-8 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           {/* Artwork Image */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b1625]">
             <div className="relative aspect-[4/5]">
               <Image
                 src={artwork.image}
@@ -144,92 +144,96 @@ export default async function ArtworkDetailsPage({ params }) {
             </div>
           </div>
 
-          {/* Artwork Information */}
-          <div className="lg:sticky lg:top-28">
-            <div className="inline-flex rounded-full border border-[#F97316]/30 bg-[#F97316]/10 px-3 py-1.5 text-xs font-semibold text-[#F97316]">
+          {/* Details */}
+          <div>
+            <span className="inline-flex rounded-full border border-[#F97316]/30 bg-[#F97316]/10 px-3 py-1.5 text-xs font-semibold text-[#F97316]">
               {artwork.category}
-            </div>
+            </span>
 
-            <h1 className="mt-5 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">
               {artwork.title}
             </h1>
 
-            <div className="mt-5 flex items-center gap-3 text-sm text-slate-400">
-              <UserRound size={17} />
+            <div className="mt-5 flex items-center gap-2 text-sm text-slate-400">
+              <User size={17} />
 
               <span>Created by</span>
 
-              <Link
-                href="/artworks"
-                className="font-semibold text-white transition hover:text-[#F97316]"
-              >
-                {artwork.artist}
-              </Link>
+              <span className="font-semibold text-white">
+                {artwork.artistName}
+              </span>
             </div>
 
             <p className="mt-7 text-3xl font-bold text-[#F97316]">
-              ${artwork.price}
+              ${Number(artwork.price).toFixed(2)}
             </p>
 
-            <div className="mt-8 border-y border-white/10 py-7">
-              <h2 className="text-lg font-semibold text-white">
+            <div className="my-8 h-px bg-white/10" />
+
+            {/* About */}
+            <section>
+              <h2 className="text-xl font-bold">
                 About this artwork
               </h2>
 
-              <p className="mt-3 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
+              <p className="mt-4 leading-7 text-slate-400">
                 {artwork.description}
               </p>
-            </div>
+            </section>
 
             {/* Metadata */}
-            <div className="mt-7 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <Palette size={17} className="text-[#F97316]" />
-                  <span className="text-xs uppercase tracking-[0.18em]">
-                    Category
-                  </span>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <Palette
+                    size={16}
+                    className="text-[#F97316]"
+                  />
+                  Category
                 </div>
 
-                <p className="mt-2 text-sm font-semibold text-white">
+                <p className="mt-2 font-semibold text-white">
                   {artwork.category}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <CalendarDays size={17} className="text-[#F97316]" />
-                  <span className="text-xs uppercase tracking-[0.18em]">
-                    Uploaded
-                  </span>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <CalendarDays
+                    size={16}
+                    className="text-[#F97316]"
+                  />
+                  Uploaded
                 </div>
 
-                <p className="mt-2 text-sm font-semibold text-white">
-                  {artwork.uploadedAt}
+                <p className="mt-2 font-semibold text-white">
+                  {uploadedDate}
                 </p>
               </div>
             </div>
 
-            {/* Purchase */}
-            <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            {/* Purchase Card */}
+            <div className="mt-8 rounded-3xl border border-white/10 bg-[#0b1625] p-5 sm:p-6">
               <p className="text-sm leading-6 text-slate-400">
-                Own this original piece and add it to your ArtHub collection.
+                Own this original piece and add it to your
+                ArtHub collection.
               </p>
 
               <button
                 type="button"
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-6 py-3.5 text-sm font-semibold text-white transition hover:opacity-90"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-4 text-sm font-semibold text-white transition hover:opacity-90"
               >
                 <ShoppingBag size={18} />
                 Buy Artwork
               </button>
 
               <p className="mt-3 text-center text-xs text-slate-500">
-                Secure checkout will be connected through Stripe.
+                Secure checkout will be connected through
+                Stripe.
               </p>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </main>
   );
