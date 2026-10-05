@@ -1,20 +1,24 @@
-import Navbar from "@/components/shared/Navbar";
 import "./globals.css";
+
+import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 
 export const metadata = {
   title: "ArtHub",
-  description: "Discover and collect original artworks from talented artists.",
+  description:
+    "Discover and collect original artworks from talented independent artists.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>
-        <Navbar/>
+        <Navbar />
+
         {children}
-        <Footer/>
-        </body>
+
+        <Footer />
+      </body>
     </html>
   );
 }
