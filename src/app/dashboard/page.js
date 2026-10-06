@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { useRouter } from "next/navigation";
 
 import {
+  Crown,
   Heart,
   Loader2,
   Palette,
@@ -16,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -23,42 +29,71 @@ export default function DashboardPage() {
   const [session, setSession] =
     useState(null);
 
+  const [plan, setPlan] =
+    useState("free");
+
   const [isLoading, setIsLoading] =
     useState(true);
 
   useEffect(() => {
-    const loadSession = async () => {
-      try {
-        const { data } =
-          await authClient.getSession();
+    const loadDashboard =
+      async () => {
+        try {
+          const { data } =
+            await authClient.getSession();
 
-        if (!data?.user) {
+          if (!data?.user) {
+            router.push("/login");
+            return;
+          }
+
+          setSession(data);
+
+          if (
+            data.user.role !==
+            "admin"
+          ) {
+            const response =
+              await fetch(
+                `${API_URL}/subscriptions/me`,
+                {
+                  credentials:
+                    "include",
+
+                  cache:
+                    "no-store",
+                }
+              );
+
+            const result =
+              await response.json();
+
+            if (response.ok) {
+              setPlan(
+                result.data?.plan ||
+                  "free"
+              );
+            }
+          }
+        } catch (error) {
+          console.error(
+            "Dashboard load error:",
+            error
+          );
+
           router.push("/login");
-          return;
+        } finally {
+          setIsLoading(false);
         }
+      };
 
-        setSession(data);
-      } catch (error) {
-        console.error(
-          "Dashboard session error:",
-          error
-        );
-
-        router.push("/login");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadSession();
+    loadDashboard();
   }, [router]);
 
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#07111f]">
-        <Loader2
-          className="animate-spin text-[#F97316]"
-        />
+        <Loader2 className="animate-spin text-[#F97316]" />
       </main>
     );
   }
@@ -141,8 +176,14 @@ export default function DashboardPage() {
           .
         </p>
 
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#F97316]/20 bg-[#F97316]/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-[#F97316]">
+          <Crown size={14} />
+
+          {plan} Plan
+        </div>
+
         {isArtist ? (
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
             <DashboardCard
               href="/artworks"
               icon={Palette}
@@ -170,9 +211,16 @@ export default function DashboardPage() {
               title="Sales History"
               description="Track sales and revenue."
             />
+
+            <DashboardCard
+              href="/pricing"
+              icon={Crown}
+              title="Membership"
+              description={`Current plan: ${plan}.`}
+            />
           </div>
         ) : (
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <DashboardCard
               href="/artworks"
               icon={Palette}
@@ -192,6 +240,13 @@ export default function DashboardPage() {
               icon={ShoppingBag}
               title="My Collection"
               description="View purchased artworks."
+            />
+
+            <DashboardCard
+              href="/pricing"
+              icon={Crown}
+              title="Membership"
+              description={`Current plan: ${plan}.`}
             />
           </div>
         )}
