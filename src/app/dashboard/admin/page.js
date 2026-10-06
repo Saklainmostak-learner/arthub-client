@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   DollarSign,
-  ImageIcon,
   Loader2,
   Palette,
   ReceiptText,
@@ -25,49 +24,30 @@ import { API_URL } from "@/lib/api";
 export default function AdminDashboardPage() {
   const router = useRouter();
 
-  const [session, setSession] =
-    useState(null);
+  const [session, setSession] = useState(null);
+  const [activeTab, setActiveTab] = useState("users");
 
-  const [activeTab, setActiveTab] =
-    useState("users");
+  const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [artworks, setArtworks] = useState([]);
+  const [transactions, setTransactions] = useState([]);
 
-  const [stats, setStats] =
-    useState(null);
-
-  const [users, setUsers] =
-    useState([]);
-
-  const [artworks, setArtworks] =
-    useState([]);
-
-  const [transactions, setTransactions] =
-    useState([]);
-
-  const [isLoading, setIsLoading] =
-    useState(true);
-
-  const [actionId, setActionId] =
-    useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [actionId, setActionId] = useState("");
 
   const loadAdminData = async () => {
     try {
       setIsLoading(true);
 
-      const { data } =
-        await authClient.getSession();
+      const { data } = await authClient.getSession();
 
       if (!data?.user) {
         router.push("/login");
         return;
       }
 
-      if (
-        data.user.role !==
-        "admin"
-      ) {
-        router.push(
-          "/dashboard"
-        );
+      if (data.user.role !== "admin") {
+        router.push("/dashboard");
         return;
       }
 
@@ -79,37 +59,25 @@ export default function AdminDashboardPage() {
         artworksResponse,
         transactionsResponse,
       ] = await Promise.all([
-        fetch(
-          `${API_URL}/admin/stats`,
-          {
-            credentials: "include",
-            cache: "no-store",
-          }
-        ),
+        fetch(`${API_URL}/admin/stats`, {
+          credentials: "include",
+          cache: "no-store",
+        }),
 
-        fetch(
-          `${API_URL}/admin/users`,
-          {
-            credentials: "include",
-            cache: "no-store",
-          }
-        ),
+        fetch(`${API_URL}/admin/users`, {
+          credentials: "include",
+          cache: "no-store",
+        }),
 
-        fetch(
-          `${API_URL}/admin/artworks`,
-          {
-            credentials: "include",
-            cache: "no-store",
-          }
-        ),
+        fetch(`${API_URL}/admin/artworks`, {
+          credentials: "include",
+          cache: "no-store",
+        }),
 
-        fetch(
-          `${API_URL}/admin/transactions`,
-          {
-            credentials: "include",
-            cache: "no-store",
-          }
-        ),
+        fetch(`${API_URL}/admin/transactions`, {
+          credentials: "include",
+          cache: "no-store",
+        }),
       ]);
 
       const [
@@ -126,43 +94,37 @@ export default function AdminDashboardPage() {
 
       if (!statsResponse.ok) {
         throw new Error(
-          statsResult.message
+          statsResult.message ||
+            "Failed to load platform statistics."
         );
       }
 
       if (!usersResponse.ok) {
         throw new Error(
-          usersResult.message
+          usersResult.message ||
+            "Failed to load users."
         );
       }
 
       if (!artworksResponse.ok) {
         throw new Error(
-          artworksResult.message
+          artworksResult.message ||
+            "Failed to load artworks."
         );
       }
 
       if (!transactionsResponse.ok) {
         throw new Error(
-          transactionsResult.message
+          transactionsResult.message ||
+            "Failed to load transactions."
         );
       }
 
-      setStats(
-        statsResult.data
-      );
-
-      setUsers(
-        usersResult.data || []
-      );
-
-      setArtworks(
-        artworksResult.data || []
-      );
-
+      setStats(statsResult.data || null);
+      setUsers(usersResult.data || []);
+      setArtworks(artworksResult.data || []);
       setTransactions(
-        transactionsResult.data ||
-          []
+        transactionsResult.data || []
       );
     } catch (error) {
       console.error(
@@ -183,17 +145,78 @@ export default function AdminDashboardPage() {
     loadAdminData();
   }, [router]);
 
-  const handleRoleChange = async (
-    userId,
-    role
-  ) => {
+  const isCurrentAdmin = (user) => {
+    if (!session?.user || !user) {
+      return false;
+    }
+
+    const sessionId = String(
+      session.user.id || ""
+    );
+
+    const databaseId = String(
+      user._id || ""
+    );
+
+    const sessionEmail =
+      session.user.email
+        ?.trim()
+        .toLowerCase();
+
+    const databaseEmail =
+      user.email
+        ?.trim()
+        .toLowerCase();
+
+    return (
+      (sessionId &&
+        databaseId &&
+        sessionId === databaseId) ||
+      (sessionEmail &&
+        databaseEmail &&
+        sessionEmail === databaseEmail)
+    );
+  };
+
+  const refreshStats = async () => {
     try {
-      setActionId(
-        userId
+      const response = await fetch(
+        `${API_URL}/admin/stats`,
+        {
+          credentials: "include",
+          cache: "no-store",
+        }
       );
 
+      const result = await response.json();
+
+      if (response.ok) {
+        setStats(result.data || null);
+      }
+    } catch (error) {
+      console.error(
+        "Refresh stats error:",
+        error
+      );
+    }
+  };
+
+  const handleRoleChange = async (
+    user,
+    role
+  ) => {
+    if (isCurrentAdmin(user)) {
+      toast.error(
+        "Your admin account is protected."
+      );
+      return;
+    }
+
+    try {
+      setActionId(user._id);
+
       const response = await fetch(
-        `${API_URL}/admin/users/${userId}/role`,
+        `${API_URL}/admin/users/${user._id}/role`,
         {
           method: "PATCH",
 
@@ -215,20 +238,23 @@ export default function AdminDashboardPage() {
 
       if (!response.ok) {
         throw new Error(
-          result.message
+          result.message ||
+            "Unable to update user role."
         );
       }
 
       setUsers((previous) =>
-        previous.map((user) =>
-          user._id === userId
+        previous.map((item) =>
+          item._id === user._id
             ? {
-                ...user,
+                ...item,
                 role,
               }
-            : user
+            : item
         )
       );
+
+      await refreshStats();
 
       toast.success(
         "User role updated."
@@ -244,20 +270,32 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteUser = async (
-    userId
+    user
   ) => {
-    try {
-      setActionId(
-        userId
+    if (isCurrentAdmin(user)) {
+      toast.error(
+        "Your admin account is protected."
+      );
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Delete ${user.name || user.email}? This action cannot be undone.`
       );
 
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setActionId(user._id);
+
       const response = await fetch(
-        `${API_URL}/admin/users/${userId}`,
+        `${API_URL}/admin/users/${user._id}`,
         {
           method: "DELETE",
-
-          credentials:
-            "include",
+          credentials: "include",
         }
       );
 
@@ -266,16 +304,19 @@ export default function AdminDashboardPage() {
 
       if (!response.ok) {
         throw new Error(
-          result.message
+          result.message ||
+            "Unable to delete user."
         );
       }
 
       setUsers((previous) =>
         previous.filter(
-          (user) =>
-            user._id !== userId
+          (item) =>
+            item._id !== user._id
         )
       );
+
+      await refreshStats();
 
       toast.success(
         "User deleted."
@@ -291,20 +332,27 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteArtwork = async (
-    artworkId
+    artwork
   ) => {
+    const confirmed =
+      window.confirm(
+        `Delete "${artwork.title}"? This action cannot be undone.`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
       setActionId(
-        artworkId
+        artwork._id
       );
 
       const response = await fetch(
-        `${API_URL}/admin/artworks/${artworkId}`,
+        `${API_URL}/admin/artworks/${artwork._id}`,
         {
           method: "DELETE",
-
-          credentials:
-            "include",
+          credentials: "include",
         }
       );
 
@@ -313,17 +361,20 @@ export default function AdminDashboardPage() {
 
       if (!response.ok) {
         throw new Error(
-          result.message
+          result.message ||
+            "Unable to delete artwork."
         );
       }
 
       setArtworks((previous) =>
         previous.filter(
-          (artwork) =>
-            artwork._id !==
-            artworkId
+          (item) =>
+            item._id !==
+            artwork._id
         )
       );
+
+      await refreshStats();
 
       toast.success(
         "Artwork deleted."
@@ -340,9 +391,10 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#07111f] text-white">
-        <div className="flex items-center gap-3 text-slate-400">
+      <main className="flex min-h-screen items-center justify-center bg-[#07111f] px-4 text-white">
+        <div className="flex items-center gap-3 text-sm text-slate-400">
           <Loader2
+            size={20}
             className="animate-spin text-[#F97316]"
           />
 
@@ -361,25 +413,59 @@ export default function AdminDashboardPage() {
       <div className="mx-auto max-w-7xl">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white"
+          className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
         >
           <ArrowLeft size={17} />
           Back to Dashboard
         </Link>
 
         <div className="mt-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#F97316]">
-            Administration
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#F97316]">
+              Administration
+            </p>
 
-          <h1 className="mt-3 text-4xl font-bold sm:text-5xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-300">
+              <ShieldCheck size={13} />
+              Secure Admin Area
+            </span>
+          </div>
+
+          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
             Admin Dashboard
           </h1>
 
-          <p className="mt-4 text-slate-400">
-            Manage users, artworks,
-            transactions, and platform activity.
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
+            Manage ArtHub users, roles,
+            artworks, transactions, and
+            platform activity from one
+            protected workspace.
           </p>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-[#F97316]/20 bg-[#F97316]/[0.05] p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
+              <ShieldCheck size={20} />
+            </div>
+
+            <div>
+              <p className="font-semibold text-white">
+                Signed in as Administrator
+              </p>
+
+              <p className="mt-1 text-sm text-slate-400">
+                {session.user.name} ·{" "}
+                {session.user.email}
+              </p>
+
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Your current admin account is
+                protected from accidental role
+                changes and deletion.
+              </p>
+            </div>
+          </div>
         </div>
 
         {stats && (
@@ -412,7 +498,7 @@ export default function AdminDashboardPage() {
               icon={DollarSign}
               label="Revenue"
               value={`$${Number(
-                stats.totalRevenue
+                stats.totalRevenue || 0
               ).toFixed(2)}`}
             />
           </div>
@@ -420,254 +506,416 @@ export default function AdminDashboardPage() {
 
         {stats && (
           <div className="mt-5 flex flex-wrap gap-3 text-xs">
-            <span className="rounded-full bg-white/[0.05] px-3 py-2 text-slate-300">
+            <StatusBadge>
               Collectors:{" "}
               {stats.totalCollectors}
-            </span>
+            </StatusBadge>
 
-            <span className="rounded-full bg-white/[0.05] px-3 py-2 text-slate-300">
+            <StatusBadge>
               Artists:{" "}
               {stats.totalArtists}
-            </span>
+            </StatusBadge>
 
-            <span className="rounded-full bg-white/[0.05] px-3 py-2 text-slate-300">
+            <StatusBadge>
               Admins:{" "}
               {stats.totalAdmins}
-            </span>
+            </StatusBadge>
 
-            <span className="rounded-full bg-white/[0.05] px-3 py-2 text-slate-300">
+            <StatusBadge>
               Sold Artworks:{" "}
               {stats.soldArtworks}
-            </span>
+            </StatusBadge>
           </div>
         )}
 
         <div className="mt-10 flex flex-wrap gap-3">
           {[
-            "users",
-            "artworks",
-            "transactions",
+            {
+              id: "users",
+              label: `Users (${users.length})`,
+            },
+            {
+              id: "artworks",
+              label: `Artworks (${artworks.length})`,
+            },
+            {
+              id: "transactions",
+              label: `Transactions (${transactions.length})`,
+            },
           ].map((tab) => (
             <button
-              key={tab}
+              key={tab.id}
               type="button"
               onClick={() =>
-                setActiveTab(tab)
+                setActiveTab(
+                  tab.id
+                )
               }
-              className={`rounded-xl px-5 py-3 text-sm font-semibold capitalize transition ${
-                activeTab === tab
-                  ? "bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316]"
-                  : "border border-white/10 bg-white/[0.03] text-slate-300"
+              className={`rounded-xl px-5 py-3 text-sm font-semibold transition ${
+                activeTab === tab.id
+                  ? "bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] text-white shadow-lg"
+                  : "border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]"
               }`}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
 
         {activeTab === "users" && (
           <section className="mt-6 space-y-4">
-            {users.map((user) => (
-              <article
-                key={user._id}
-                className="grid gap-5 rounded-2xl border border-white/10 bg-[#0d1928] p-5 lg:grid-cols-[1.5fr_1fr_auto] lg:items-center"
-              >
-                <div>
-                  <p className="font-bold">
-                    {user.name ||
-                      "Unnamed User"}
-                  </p>
+            {users.length === 0 ? (
+              <EmptyState
+                title="No users found"
+                description="Registered users will appear here."
+              />
+            ) : (
+              users.map((user) => {
+                const currentAdmin =
+                  isCurrentAdmin(user);
 
-                  <p className="mt-1 text-sm text-slate-400">
-                    {user.email}
-                  </p>
-                </div>
+                const busy =
+                  actionId ===
+                  user._id;
 
-                <select
-                  value={
-                    user.role ||
-                    "user"
-                  }
-                  disabled={
-                    actionId ===
-                    user._id
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    handleRoleChange(
-                      user._id,
-                      event.target
-                        .value
-                    )
-                  }
-                  className="rounded-xl border border-white/10 bg-[#081321] px-4 py-3 text-sm outline-none"
-                >
-                  <option value="user">
-                    Collector
-                  </option>
+                return (
+                  <article
+                    key={user._id}
+                    className={`rounded-2xl border p-5 transition ${
+                      currentAdmin
+                        ? "border-[#F97316]/25 bg-[#F97316]/[0.04]"
+                        : "border-white/10 bg-[#0d1928]"
+                    }`}
+                  >
+                    <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr_auto] lg:items-center">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-bold">
+                            {user.name ||
+                              "Unnamed User"}
+                          </p>
 
-                  <option value="artist">
-                    Artist
-                  </option>
+                          {currentAdmin && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-[#F97316]/20 bg-[#F97316]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#F97316]">
+                              <ShieldCheck
+                                size={12}
+                              />
 
-                  <option value="admin">
-                    Admin
-                  </option>
-                </select>
+                              Protected Admin
+                            </span>
+                          )}
+                        </div>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDeleteUser(
-                      user._id
-                    )
-                  }
-                  disabled={
-                    actionId ===
-                    user._id
-                  }
-                  className="flex items-center justify-center gap-2 rounded-xl border border-red-500/20 px-4 py-3 text-sm text-red-300"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
-              </article>
-            ))}
+                        <p className="mt-1 text-sm text-slate-400">
+                          {user.email}
+                        </p>
+
+                        <p className="mt-2 text-xs capitalize text-slate-500">
+                          Current role:{" "}
+                          <span className="font-semibold text-slate-300">
+                            {user.role ===
+                            "user"
+                              ? "Collector"
+                              : user.role ||
+                                "Collector"}
+                          </span>
+                        </p>
+                      </div>
+
+                      {currentAdmin ? (
+                        <div className="flex items-center gap-2 rounded-xl border border-[#F97316]/20 bg-[#081321] px-4 py-3 text-sm text-[#F97316]">
+                          <ShieldCheck
+                            size={16}
+                          />
+
+                          Administrator
+                        </div>
+                      ) : (
+                        <select
+                          value={
+                            user.role ||
+                            "user"
+                          }
+                          disabled={
+                            busy
+                          }
+                          onChange={(
+                            event
+                          ) =>
+                            handleRoleChange(
+                              user,
+                              event
+                                .target
+                                .value
+                            )
+                          }
+                          className="rounded-xl border border-white/10 bg-[#081321] px-4 py-3 text-sm text-white outline-none transition focus:border-[#F97316]/50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <option value="user">
+                            Collector
+                          </option>
+
+                          <option value="artist">
+                            Artist
+                          </option>
+
+                          <option value="admin">
+                            Admin
+                          </option>
+                        </select>
+                      )}
+
+                      {currentAdmin ? (
+                        <button
+                          type="button"
+                          disabled
+                          className="flex items-center justify-center gap-2 rounded-xl border border-emerald-400/15 bg-emerald-500/[0.05] px-4 py-3 text-sm font-medium text-emerald-300"
+                        >
+                          <ShieldCheck
+                            size={16}
+                          />
+                          Protected
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDeleteUser(
+                              user
+                            )
+                          }
+                          disabled={
+                            busy
+                          }
+                          className="flex items-center justify-center gap-2 rounded-xl border border-red-500/20 px-4 py-3 text-sm text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {busy ? (
+                            <Loader2
+                              size={16}
+                              className="animate-spin"
+                            />
+                          ) : (
+                            <Trash2
+                              size={16}
+                            />
+                          )}
+
+                          {busy
+                            ? "Working..."
+                            : "Delete"}
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              })
+            )}
           </section>
         )}
 
         {activeTab ===
           "artworks" && (
-          <section className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {artworks.map(
-              (artwork) => (
-                <article
-                  key={
-                    artwork._id
-                  }
-                  className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d1928]"
-                >
-                  <div className="relative aspect-[4/5] bg-[#081321]">
-                    <Image
-                      src={
-                        artwork.image
-                      }
-                      alt={
-                        artwork.title
-                      }
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+          <section className="mt-6">
+            {artworks.length ===
+            0 ? (
+              <EmptyState
+                title="No artworks found"
+                description="Published artworks will appear here."
+              />
+            ) : (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {artworks.map(
+                  (artwork) => {
+                    const busy =
+                      actionId ===
+                      artwork._id;
 
-                  <div className="p-4">
-                    <p className="font-bold">
-                      {
-                        artwork.title
-                      }
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-400">
-                      by{" "}
-                      {
-                        artwork.artistName
-                      }
-                    </p>
-
-                    <p className="mt-3 font-bold text-[#F97316]">
-                      $
-                      {Number(
-                        artwork.price
-                      ).toFixed(2)}
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDeleteArtwork(
+                    return (
+                      <article
+                        key={
                           artwork._id
-                        )
-                      }
-                      disabled={
-                        actionId ===
-                        artwork._id
-                      }
-                      className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 px-4 py-3 text-sm text-red-300"
-                    >
-                      <Trash2
-                        size={16}
-                      />
-                      Delete Artwork
-                    </button>
-                  </div>
-                </article>
-              )
+                        }
+                        className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d1928]"
+                      >
+                        <div className="relative aspect-[4/5] overflow-hidden bg-[#081321]">
+                          <Image
+                            src={
+                              artwork.image
+                            }
+                            alt={
+                              artwork.title ||
+                              "Artwork"
+                            }
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                            className="object-cover"
+                          />
+
+                          {artwork.sold ===
+                            true && (
+                            <span className="absolute bottom-3 left-3 rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                              Sold
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="p-4">
+                          <p className="truncate font-bold">
+                            {
+                              artwork.title
+                            }
+                          </p>
+
+                          <p className="mt-1 truncate text-sm text-slate-400">
+                            by{" "}
+                            {
+                              artwork.artistName
+                            }
+                          </p>
+
+                          <div className="mt-4 flex items-center justify-between gap-3">
+                            <p className="font-bold text-[#F97316]">
+                              $
+                              {Number(
+                                artwork.price ||
+                                  0
+                              ).toFixed(2)}
+                            </p>
+
+                            <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-slate-400">
+                              {artwork.category ||
+                                "Artwork"}
+                            </span>
+                          </div>
+
+                          <Link
+                            href={`/artworks/${artwork._id}`}
+                            className="mt-5 flex w-full items-center justify-center rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.05]"
+                          >
+                            View Artwork
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteArtwork(
+                                artwork
+                              )
+                            }
+                            disabled={
+                              busy
+                            }
+                            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 px-4 py-3 text-sm text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {busy ? (
+                              <Loader2
+                                size={16}
+                                className="animate-spin"
+                              />
+                            ) : (
+                              <Trash2
+                                size={16}
+                              />
+                            )}
+
+                            {busy
+                              ? "Deleting..."
+                              : "Delete Artwork"}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  }
+                )}
+              </div>
             )}
           </section>
         )}
 
         {activeTab ===
           "transactions" && (
-          <section className="mt-6 space-y-4">
-            {transactions.map(
-              (transaction) => (
-                <article
-                  key={
-                    transaction._id
+          <section className="mt-6">
+            {transactions.length ===
+            0 ? (
+              <EmptyState
+                title="No transactions found"
+                description="Completed marketplace transactions will appear here."
+              />
+            ) : (
+              <div className="space-y-4">
+                {transactions.map(
+                  (
+                    transaction
+                  ) => {
+                    const date =
+                      transaction.purchasedAt
+                        ? new Date(
+                            transaction.purchasedAt
+                          ).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )
+                        : "Unknown";
+
+                    return (
+                      <article
+                        key={
+                          transaction._id
+                        }
+                        className="grid gap-5 rounded-2xl border border-white/10 bg-[#0d1928] p-5 sm:p-6 lg:grid-cols-5 lg:items-center"
+                      >
+                        <TransactionColumn
+                          label="Artwork"
+                          value={
+                            transaction.artworkTitle ||
+                            "Untitled Artwork"
+                          }
+                        />
+
+                        <TransactionColumn
+                          label="Artist"
+                          value={
+                            transaction.artistName ||
+                            "Unknown Artist"
+                          }
+                          subvalue={
+                            transaction.artistEmail
+                          }
+                        />
+
+                        <TransactionColumn
+                          label="Buyer"
+                          value={
+                            transaction.buyerName ||
+                            "Collector"
+                          }
+                          subvalue={
+                            transaction.buyerEmail
+                          }
+                        />
+
+                        <TransactionColumn
+                          label="Amount"
+                          value={`$${Number(
+                            transaction.amount ||
+                              0
+                          ).toFixed(2)}`}
+                          highlight
+                        />
+
+                        <TransactionColumn
+                          label="Date"
+                          value={date}
+                        />
+                      </article>
+                    );
                   }
-                  className="grid gap-5 rounded-2xl border border-white/10 bg-[#0d1928] p-5 lg:grid-cols-4"
-                >
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      Artwork
-                    </p>
-
-                    <p className="mt-1 font-bold">
-                      {
-                        transaction.artworkTitle
-                      }
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      Artist
-                    </p>
-
-                    <p className="mt-1 text-sm">
-                      {
-                        transaction.artistName
-                      }
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      Buyer
-                    </p>
-
-                    <p className="mt-1 text-sm">
-                      {
-                        transaction.buyerEmail
-                      }
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      Amount
-                    </p>
-
-                    <p className="mt-1 font-bold text-emerald-300">
-                      $
-                      {Number(
-                        transaction.amount
-                      ).toFixed(2)}
-                    </p>
-                  </div>
-                </article>
-              )
+                )}
+              </div>
             )}
           </section>
         )}
@@ -682,7 +930,7 @@ function StatCard({
   value,
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#0d1928] p-5">
+    <div className="rounded-2xl border border-white/10 bg-[#0d1928] p-5 transition hover:border-[#F97316]/20">
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
         <Icon size={20} />
       </div>
@@ -691,9 +939,72 @@ function StatCard({
         {label}
       </p>
 
-      <p className="mt-1 text-3xl font-bold">
+      <p className="mt-1 text-3xl font-bold text-white">
         {value}
       </p>
+    </div>
+  );
+}
+
+function StatusBadge({
+  children,
+}) {
+  return (
+    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-slate-300">
+      {children}
+    </span>
+  );
+}
+
+function EmptyState({
+  title,
+  description,
+}) {
+  return (
+    <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center">
+      <ShieldCheck
+        size={28}
+        className="mx-auto text-slate-600"
+      />
+
+      <h2 className="mt-4 text-lg font-bold text-white">
+        {title}
+      </h2>
+
+      <p className="mt-2 text-sm text-slate-500">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function TransactionColumn({
+  label,
+  value,
+  subvalue,
+  highlight = false,
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        {label}
+      </p>
+
+      <p
+        className={`mt-1 truncate text-sm font-semibold ${
+          highlight
+            ? "text-emerald-300"
+            : "text-white"
+        }`}
+      >
+        {value}
+      </p>
+
+      {subvalue && (
+        <p className="mt-1 truncate text-xs text-slate-500">
+          {subvalue}
+        </p>
+      )}
     </div>
   );
 }
