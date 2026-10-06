@@ -10,14 +10,22 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { API_URL } from "@/lib/api";
+
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
 
-  const sessionId = searchParams.get("session_id");
+  const sessionId =
+    searchParams.get("session_id");
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [purchase, setPurchase] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [purchase, setPurchase] =
+    useState(null);
+
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
   useEffect(() => {
     const confirmPayment = async () => {
@@ -25,18 +33,20 @@ export default function PaymentSuccessPage() {
         setErrorMessage(
           "Stripe session ID could not be found."
         );
+
         setIsLoading(false);
         return;
       }
 
       try {
         const response = await fetch(
-          "http://localhost:5000/purchases/confirm-payment",
+          `${API_URL}/purchases/confirm-payment`,
           {
             method: "POST",
 
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type":
+                "application/json",
             },
 
             body: JSON.stringify({
@@ -45,7 +55,8 @@ export default function PaymentSuccessPage() {
           }
         );
 
-        const result = await response.json();
+        const result =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(

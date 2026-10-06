@@ -11,18 +11,20 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 export default function AddArtworkPage() {
   const router = useRouter();
 
   const [session, setSession] = useState(null);
-  const [isSessionLoading, setIsSessionLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSessionLoading, setIsSessionLoading] =
+    useState(true);
 
-  const [message, setMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -35,7 +37,8 @@ export default function AddArtworkPage() {
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const { data } = await authClient.getSession();
+        const { data } =
+          await authClient.getSession();
 
         if (!data?.user) {
           router.push("/login");
@@ -49,7 +52,11 @@ export default function AddArtworkPage() {
 
         setSession(data);
       } catch (error) {
-        console.error("Failed to load session:", error);
+        console.error(
+          "Failed to load session:",
+          error
+        );
+
         router.push("/login");
       } finally {
         setIsSessionLoading(false);
@@ -60,7 +67,27 @@ export default function AddArtworkPage() {
   }, [router]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const {
+      name,
+      value,
+    } = event.target;
+
+    if (name === "price") {
+      const decimalPattern =
+        /^\d*\.?\d{0,2}$/;
+
+      if (
+        value === "" ||
+        decimalPattern.test(value)
+      ) {
+        setFormData((previous) => ({
+          ...previous,
+          price: value,
+        }));
+      }
+
+      return;
+    }
 
     setFormData((previous) => ({
       ...previous,
@@ -71,41 +98,82 @@ export default function AddArtworkPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    setMessage("");
-    setErrorMessage("");
-    setIsSubmitting(true);
+    if (!session?.user) {
+      toast.error(
+        "Please sign in again."
+      );
+      return;
+    }
+
+    const numericPrice =
+      Number(formData.price);
+
+    if (
+      !formData.price.trim() ||
+      Number.isNaN(numericPrice) ||
+      numericPrice <= 0
+    ) {
+      toast.error(
+        "Please enter a valid price greater than 0."
+      );
+      return;
+    }
 
     try {
-      const artworkData = {
-        title: formData.title.trim(),
-        image: formData.image.trim(),
-        category: formData.category,
-        price: Number(formData.price),
-        description: formData.description.trim(),
+      setIsSubmitting(true);
 
-        artistName: session.user.name,
-        artistEmail: session.user.email,
+      const artworkData = {
+        title:
+          formData.title.trim(),
+
+        image:
+          formData.image.trim(),
+
+        category:
+          formData.category,
+
+        price:
+          numericPrice,
+
+        description:
+          formData.description.trim(),
+
+        artistName:
+          session.user.name,
+
+        artistEmail:
+          session.user.email,
       };
 
-      const response = await fetch("http://localhost:5000/artworks", {
-        method: "POST",
+      const response = await fetch(
+        `${API_URL}/artworks`,
+        {
+          method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
 
-        body: JSON.stringify(artworkData),
-      });
+          body: JSON.stringify(
+            artworkData
+          ),
+        }
+      );
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
-          result.message || "Failed to publish artwork."
+          result.message ||
+            "Failed to publish artwork."
         );
       }
 
-      setMessage("Artwork published successfully.");
+      toast.success(
+        "Artwork published successfully."
+      );
 
       setFormData({
         title: "",
@@ -114,11 +182,19 @@ export default function AddArtworkPage() {
         price: "",
         description: "",
       });
-    } catch (error) {
-      console.error("Add artwork error:", error);
 
-      setErrorMessage(
-        error.message || "Something went wrong. Please try again."
+      router.push(
+        "/dashboard/my-artworks"
+      );
+    } catch (error) {
+      console.error(
+        "Add artwork error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+          "Something went wrong. Please try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -129,7 +205,11 @@ export default function AddArtworkPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#07111f]">
         <div className="flex items-center gap-3 text-slate-400">
-          <Loader2 className="animate-spin" size={20} />
+          <Loader2
+            className="animate-spin text-[#F97316]"
+            size={20}
+          />
+
           Checking artist account...
         </div>
       </main>
@@ -161,7 +241,8 @@ export default function AddArtworkPage() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
-            Add an original piece to the ArtHub marketplace and make it
+            Add an original piece to the
+            ArtHub marketplace and make it
             discoverable to collectors.
           </p>
         </div>
@@ -169,7 +250,9 @@ export default function AddArtworkPage() {
         <div className="mt-10 rounded-[2rem] border border-white/10 bg-[#0b1625] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.25)] sm:p-8">
           <div className="mb-8 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#8B5CF6] via-[#EC4899] to-[#F97316] font-bold text-white">
-              {session.user.name?.charAt(0)?.toUpperCase() || "A"}
+              {session.user.name
+                ?.charAt(0)
+                ?.toUpperCase() || "A"}
             </div>
 
             <div>
@@ -183,19 +266,10 @@ export default function AddArtworkPage() {
             </div>
           </div>
 
-          {message && (
-            <div className="mb-6 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-              {message}
-            </div>
-          )}
-
-          {errorMessage && (
-            <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {errorMessage}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
             <div>
               <label
                 htmlFor="title"
@@ -205,7 +279,10 @@ export default function AddArtworkPage() {
               </label>
 
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                <Palette size={18} className="text-slate-500" />
+                <Palette
+                  size={18}
+                  className="text-slate-500"
+                />
 
                 <input
                   id="title"
@@ -229,7 +306,10 @@ export default function AddArtworkPage() {
               </label>
 
               <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                <ImageIcon size={18} className="text-slate-500" />
+                <ImageIcon
+                  size={18}
+                  className="text-slate-500"
+                />
 
                 <input
                   id="image"
@@ -254,7 +334,10 @@ export default function AddArtworkPage() {
                 </label>
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                  <Tag size={18} className="text-slate-500" />
+                  <Tag
+                    size={18}
+                    className="text-slate-500"
+                  />
 
                   <select
                     id="category"
@@ -264,13 +347,33 @@ export default function AddArtworkPage() {
                     onChange={handleChange}
                     className="w-full bg-[#081321] text-sm text-white outline-none"
                   >
-                    <option value="">Select Category</option>
-                    <option value="Painting">Painting</option>
-                    <option value="Digital Art">Digital Art</option>
-                    <option value="Sculpture">Sculpture</option>
-                    <option value="Photography">Photography</option>
-                    <option value="Drawing">Drawing</option>
-                    <option value="Mixed Media">Mixed Media</option>
+                    <option value="">
+                      Select Category
+                    </option>
+
+                    <option value="Painting">
+                      Painting
+                    </option>
+
+                    <option value="Digital Art">
+                      Digital Art
+                    </option>
+
+                    <option value="Sculpture">
+                      Sculpture
+                    </option>
+
+                    <option value="Photography">
+                      Photography
+                    </option>
+
+                    <option value="Drawing">
+                      Drawing
+                    </option>
+
+                    <option value="Mixed Media">
+                      Mixed Media
+                    </option>
                   </select>
                 </div>
               </div>
@@ -284,14 +387,16 @@ export default function AddArtworkPage() {
                 </label>
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                  <span className="text-slate-500">$</span>
+                  <span className="text-slate-500">
+                    $
+                  </span>
 
                   <input
                     id="price"
                     name="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
                     required
                     value={formData.price}
                     onChange={handleChange}
@@ -299,6 +404,12 @@ export default function AddArtworkPage() {
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
                 </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  Enter a price greater than
+                  $0. You can use up to two
+                  decimal places.
+                </p>
               </div>
             </div>
 
@@ -324,7 +435,10 @@ export default function AddArtworkPage() {
 
             <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-4">
               <div className="flex items-center gap-2 text-sm text-slate-300">
-                <User size={17} className="text-[#F97316]" />
+                <User
+                  size={17}
+                  className="text-[#F97316]"
+                />
 
                 <span>
                   Publishing as{" "}
@@ -342,7 +456,11 @@ export default function AddArtworkPage() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" />
+                  <Loader2
+                    size={18}
+                    className="animate-spin"
+                  />
+
                   Publishing...
                 </>
               ) : (

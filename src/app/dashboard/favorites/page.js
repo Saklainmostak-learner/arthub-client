@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -28,7 +29,8 @@ export default function FavoritesPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const { data } = await authClient.getSession();
+        const { data } =
+          await authClient.getSession();
 
         if (!data?.user) {
           router.push("/login");
@@ -43,7 +45,7 @@ export default function FavoritesPage() {
         setSession(data);
 
         const response = await fetch(
-          `http://localhost:5000/favorites/${encodeURIComponent(
+          `${API_URL}/favorites/${encodeURIComponent(
             data.user.email
           )}`,
           {
@@ -87,7 +89,7 @@ export default function FavoritesPage() {
       setErrorMessage("");
 
       const response = await fetch(
-        `http://localhost:5000/favorites/${favorite.artworkId}/${encodeURIComponent(
+        `${API_URL}/favorites/${favorite.artworkId}/${encodeURIComponent(
           session.user.email
         )}`,
         {
@@ -106,7 +108,8 @@ export default function FavoritesPage() {
 
       setFavorites((previous) =>
         previous.filter(
-          (item) => item._id !== favorite._id
+          (item) =>
+            item._id !== favorite._id
         )
       );
     } catch (error) {

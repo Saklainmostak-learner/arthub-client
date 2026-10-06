@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 export default function ArtworkDetailsPage() {
   const params = useParams();
@@ -48,7 +49,7 @@ export default function ArtworkDetailsPage() {
         setErrorMessage("");
 
         const artworkResponse = await fetch(
-          `http://localhost:5000/artworks/${id}`,
+          `${API_URL}/artworks/${id}`,
           {
             cache: "no-store",
           }
@@ -111,6 +112,7 @@ export default function ArtworkDetailsPage() {
       setErrorMessage(
         "This artwork has already been sold."
       );
+
       return;
     }
 
@@ -118,6 +120,7 @@ export default function ArtworkDetailsPage() {
       setErrorMessage(
         "Only art collectors can purchase artworks."
       );
+
       return;
     }
 
@@ -128,6 +131,7 @@ export default function ArtworkDetailsPage() {
       setErrorMessage(
         "You cannot purchase your own artwork."
       );
+
       return;
     }
 
@@ -135,12 +139,13 @@ export default function ArtworkDetailsPage() {
       setIsBuying(true);
 
       const response = await fetch(
-        "http://localhost:5000/purchases/create-checkout-session",
+        `${API_URL}/purchases/create-checkout-session`,
         {
           method: "POST",
 
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
 
           body: JSON.stringify({
@@ -151,7 +156,8 @@ export default function ArtworkDetailsPage() {
         }
       );
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -166,7 +172,8 @@ export default function ArtworkDetailsPage() {
         );
       }
 
-      window.location.href = result.url;
+      window.location.href =
+        result.url;
     } catch (error) {
       console.error(
         "Buy artwork error:",
@@ -247,7 +254,8 @@ export default function ArtworkDetailsPage() {
     session?.user?.email ===
     artwork.artistEmail;
 
-  const isSold = artwork.sold === true;
+  const isSold =
+    artwork.sold === true;
 
   return (
     <main className="min-h-screen bg-[#07111f] px-4 py-10 text-white sm:px-6 lg:px-8">
@@ -270,14 +278,18 @@ export default function ArtworkDetailsPage() {
                 priority
                 sizes="(max-width: 1024px) 100vw, 55vw"
                 className={`object-cover ${
-                  isSold ? "opacity-75" : ""
+                  isSold
+                    ? "opacity-75"
+                    : ""
                 }`}
               />
 
               {isSold && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/15">
                   <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-500/90 px-5 py-2.5 text-sm font-bold uppercase tracking-[0.2em] text-white shadow-2xl backdrop-blur">
-                    <BadgeCheck size={18} />
+                    <BadgeCheck
+                      size={18}
+                    />
                     Sold
                   </span>
                 </div>
@@ -293,7 +305,9 @@ export default function ArtworkDetailsPage() {
 
               {isSold && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300">
-                  <BadgeCheck size={14} />
+                  <BadgeCheck
+                    size={14}
+                  />
                   Sold
                 </span>
               )}
@@ -306,7 +320,9 @@ export default function ArtworkDetailsPage() {
             <div className="mt-5 flex items-center gap-2 text-sm text-slate-400">
               <User size={17} />
 
-              <span>Created by</span>
+              <span>
+                Created by
+              </span>
 
               <span className="font-semibold text-white">
                 {artwork.artistName}
@@ -366,7 +382,9 @@ export default function ArtworkDetailsPage() {
               {isSold ? (
                 <>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300">
-                    <BadgeCheck size={23} />
+                    <BadgeCheck
+                      size={23}
+                    />
                   </div>
 
                   <h3 className="mt-4 text-lg font-bold text-white">
@@ -383,7 +401,9 @@ export default function ArtworkDetailsPage() {
                     disabled
                     className="mt-5 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4 text-sm font-semibold text-slate-500"
                   >
-                    <BadgeCheck size={18} />
+                    <BadgeCheck
+                      size={18}
+                    />
                     Sold
                   </button>
                 </>
@@ -409,8 +429,12 @@ export default function ArtworkDetailsPage() {
                   ) : (
                     <button
                       type="button"
-                      onClick={handleBuyArtwork}
-                      disabled={isBuying}
+                      onClick={
+                        handleBuyArtwork
+                      }
+                      disabled={
+                        isBuying
+                      }
                       className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isBuying ? (
@@ -423,7 +447,9 @@ export default function ArtworkDetailsPage() {
                         </>
                       ) : (
                         <>
-                          <ShoppingBag size={18} />
+                          <ShoppingBag
+                            size={18}
+                          />
                           Buy Artwork
                         </>
                       )}

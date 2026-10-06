@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 export default function MyCollectionPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function MyCollectionPage() {
         setSession(data);
 
         const response = await fetch(
-          `http://localhost:5000/purchases/buyer/${encodeURIComponent(
+          `${API_URL}/purchases/buyer/${encodeURIComponent(
             data.user.email
           )}`,
           {

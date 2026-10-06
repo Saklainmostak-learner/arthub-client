@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 import {
   ArrowLeft,
   ImageIcon,
@@ -12,20 +15,27 @@ import {
   Tag,
   User,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 export default function EditArtworkPage() {
   const router = useRouter();
   const params = useParams();
+
   const id = params?.id;
 
   const [session, setSession] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -41,7 +51,8 @@ export default function EditArtworkPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const { data } = await authClient.getSession();
+        const { data } =
+          await authClient.getSession();
 
         if (!data?.user) {
           router.push("/login");
@@ -56,42 +67,80 @@ export default function EditArtworkPage() {
         setSession(data);
 
         const response = await fetch(
-          `http://localhost:5000/artworks/${id}`,
+          `${API_URL}/artworks/${id}`,
           {
             cache: "no-store",
           }
         );
 
-        const result = await response.json();
+        const result =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
-            result.message || "Failed to load artwork."
+            result.message ||
+              "Failed to load artwork."
           );
         }
 
         const artwork = result.data;
 
-        if (artwork.artistEmail !== data.user.email) {
-          router.push("/dashboard/my-artworks");
+        if (
+          artwork.artistEmail !==
+          data.user.email
+        ) {
+          toast.error(
+            "You can only edit your own artworks."
+          );
+
+          router.push(
+            "/dashboard/my-artworks"
+          );
+
+          return;
+        }
+
+        if (artwork.sold === true) {
+          toast.error(
+            "Sold artworks cannot be edited."
+          );
+
+          router.push(
+            "/dashboard/my-artworks"
+          );
+
           return;
         }
 
         setFormData({
-          title: artwork.title || "",
-          image: artwork.image || "",
-          category: artwork.category || "",
+          title:
+            artwork.title || "",
+
+          image:
+            artwork.image || "",
+
+          category:
+            artwork.category || "",
+
           price:
             artwork.price !== undefined
-              ? String(artwork.price)
+              ? String(
+                  artwork.price
+                )
               : "",
-          description: artwork.description || "",
+
+          description:
+            artwork.description || "",
         });
       } catch (error) {
-        console.error("Failed to load artwork:", error);
+        console.error(
+          "Failed to load artwork:",
+          error
+        );
 
         setErrorMessage(
-          error.message || "Unable to load artwork."
+          error.message ||
+            "Unable to load artwork."
         );
       } finally {
         setIsLoading(false);
@@ -104,7 +153,10 @@ export default function EditArtworkPage() {
   }, [id, router]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const {
+      name,
+      value,
+    } = event.target;
 
     setFormData((previous) => ({
       ...previous,
@@ -113,9 +165,16 @@ export default function EditArtworkPage() {
   };
 
   const handlePriceChange = (event) => {
-    const value = event.target.value;
+    const value =
+      event.target.value;
 
-    if (/^\d*\.?\d*$/.test(value)) {
+    const decimalPattern =
+      /^\d*\.?\d{0,2}$/;
+
+    if (
+      value === "" ||
+      decimalPattern.test(value)
+    ) {
       setFormData((previous) => ({
         ...previous,
         price: value,
@@ -127,18 +186,27 @@ export default function EditArtworkPage() {
     event.preventDefault();
 
     setErrorMessage("");
-    setSuccessMessage("");
 
-    const numericPrice = Number(formData.price);
+    if (!session?.user) {
+      toast.error(
+        "Please sign in again."
+      );
+
+      return;
+    }
+
+    const numericPrice =
+      Number(formData.price);
 
     if (
       formData.price.trim() === "" ||
       Number.isNaN(numericPrice) ||
       numericPrice <= 0
     ) {
-      setErrorMessage(
+      toast.error(
         "Please enter a valid price greater than 0."
       );
+
       return;
     }
 
@@ -146,50 +214,76 @@ export default function EditArtworkPage() {
       setIsSubmitting(true);
 
       const updatedArtwork = {
-        title: formData.title.trim(),
-        image: formData.image.trim(),
-        category: formData.category,
-        price: numericPrice,
-        description: formData.description.trim(),
+        title:
+          formData.title.trim(),
 
-        artistName: session.user.name,
-        artistEmail: session.user.email,
+        image:
+          formData.image.trim(),
+
+        category:
+          formData.category,
+
+        price:
+          numericPrice,
+
+        description:
+          formData.description.trim(),
+
+        artistName:
+          session.user.name,
+
+        artistEmail:
+          session.user.email,
       };
 
       const response = await fetch(
-        `http://localhost:5000/artworks/${id}`,
+        `${API_URL}/artworks/${id}`,
         {
           method: "PUT",
+
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
-          body: JSON.stringify(updatedArtwork),
+
+          body: JSON.stringify(
+            updatedArtwork
+          ),
         }
       );
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
-          result.message || "Failed to update artwork."
+          result.message ||
+            "Failed to update artwork."
         );
       }
 
-      setSuccessMessage(
+      toast.success(
         "Artwork updated successfully."
       );
 
-      setTimeout(() => {
-        router.push("/dashboard/my-artworks");
-        router.refresh();
-      }, 800);
-    } catch (error) {
-      console.error("Update artwork error:", error);
-
-      setErrorMessage(
-        error.message ||
-          "Something went wrong while updating the artwork."
+      router.push(
+        "/dashboard/my-artworks"
       );
+
+      router.refresh();
+    } catch (error) {
+      console.error(
+        "Update artwork error:",
+        error
+      );
+
+      const message =
+        error.message ||
+        "Something went wrong while updating the artwork.";
+
+      setErrorMessage(message);
+
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -203,6 +297,7 @@ export default function EditArtworkPage() {
             size={20}
             className="animate-spin text-[#F97316]"
           />
+
           Loading artwork...
         </div>
       </main>
@@ -234,14 +329,17 @@ export default function EditArtworkPage() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
-            Update the details of your published artwork.
+            Update the details of your published
+            artwork.
           </p>
         </div>
 
         <div className="mt-10 rounded-[2rem] border border-white/10 bg-[#0b1625] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.25)] sm:p-8">
           <div className="mb-8 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#8B5CF6] via-[#EC4899] to-[#F97316] font-bold text-white">
-              {session.user.name?.charAt(0)?.toUpperCase() || "A"}
+              {session.user.name
+                ?.charAt(0)
+                ?.toUpperCase() || "A"}
             </div>
 
             <div className="min-w-0">
@@ -255,19 +353,16 @@ export default function EditArtworkPage() {
             </div>
           </div>
 
-          {successMessage && (
-            <div className="mb-6 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-              {successMessage}
-            </div>
-          )}
-
           {errorMessage && (
             <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
               {errorMessage}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
             <div>
               <label
                 htmlFor="title"
@@ -339,28 +434,38 @@ export default function EditArtworkPage() {
                     id="category"
                     name="category"
                     required
-                    value={formData.category}
-                    onChange={handleChange}
+                    value={
+                      formData.category
+                    }
+                    onChange={
+                      handleChange
+                    }
                     className="w-full bg-[#081321] text-sm text-white outline-none"
                   >
                     <option value="">
                       Select Category
                     </option>
+
                     <option value="Painting">
                       Painting
                     </option>
+
                     <option value="Digital Art">
                       Digital Art
                     </option>
+
                     <option value="Sculpture">
                       Sculpture
                     </option>
+
                     <option value="Photography">
                       Photography
                     </option>
+
                     <option value="Drawing">
                       Drawing
                     </option>
+
                     <option value="Mixed Media">
                       Mixed Media
                     </option>
@@ -386,12 +491,23 @@ export default function EditArtworkPage() {
                     name="price"
                     type="text"
                     inputMode="decimal"
+                    autoComplete="off"
                     required
-                    value={formData.price}
-                    onChange={handlePriceChange}
-                    className="w-full bg-transparent text-sm text-white caret-white outline-none"
+                    value={
+                      formData.price
+                    }
+                    onChange={
+                      handlePriceChange
+                    }
+                    placeholder="250"
+                    className="w-full bg-transparent text-sm text-white caret-white outline-none placeholder:text-slate-500"
                   />
                 </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  Enter a price greater than $0.
+                  Up to two decimal places.
+                </p>
               </div>
             </div>
 
@@ -408,8 +524,12 @@ export default function EditArtworkPage() {
                 name="description"
                 rows={6}
                 required
-                value={formData.description}
-                onChange={handleChange}
+                value={
+                  formData.description
+                }
+                onChange={
+                  handleChange
+                }
                 className="w-full resize-none rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 text-sm leading-6 text-white outline-none focus:border-[#F97316]/50"
               />
             </div>
@@ -441,6 +561,7 @@ export default function EditArtworkPage() {
                     size={18}
                     className="animate-spin"
                   />
+
                   Updating...
                 </>
               ) : (

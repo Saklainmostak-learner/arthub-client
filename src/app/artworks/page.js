@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import ArtworkGrid from "@/components/artworks/ArtworkGrid";
+import { API_URL } from "@/lib/api";
 
 export default function ArtworksPage() {
   const [artworks, setArtworks] = useState([]);
@@ -26,12 +27,9 @@ export default function ArtworksPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const response = await fetch(
-          "http://localhost:5000/artworks",
-          {
-            cache: "no-store",
-          }
-        );
+        const response = await fetch(`${API_URL}/artworks`, {
+          cache: "no-store",
+        });
 
         const result = await response.json();
 
@@ -60,17 +58,12 @@ export default function ArtworksPage() {
   const filteredArtworks = useMemo(() => {
     let result = [...artworks];
 
-    const normalizedSearch = searchTerm
-      .trim()
-      .toLowerCase();
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
     if (normalizedSearch) {
       result = result.filter((artwork) => {
-        const title =
-          artwork.title?.toLowerCase() || "";
-
-        const artistName =
-          artwork.artistName?.toLowerCase() || "";
+        const title = artwork.title?.toLowerCase() || "";
+        const artistName = artwork.artistName?.toLowerCase() || "";
 
         return (
           title.includes(normalizedSearch) ||
@@ -101,15 +94,13 @@ export default function ArtworksPage() {
 
     if (sortOption === "price-low") {
       result.sort(
-        (a, b) =>
-          Number(a.price) - Number(b.price)
+        (a, b) => Number(a.price) - Number(b.price)
       );
     }
 
     if (sortOption === "price-high") {
       result.sort(
-        (a, b) =>
-          Number(b.price) - Number(a.price)
+        (a, b) => Number(b.price) - Number(a.price)
       );
     }
 
@@ -186,17 +177,11 @@ export default function ArtworksPage() {
             >
               <option value="">All Categories</option>
               <option value="Painting">Painting</option>
-              <option value="Digital Art">
-                Digital Art
-              </option>
+              <option value="Digital Art">Digital Art</option>
               <option value="Sculpture">Sculpture</option>
-              <option value="Photography">
-                Photography
-              </option>
+              <option value="Photography">Photography</option>
               <option value="Drawing">Drawing</option>
-              <option value="Mixed Media">
-                Mixed Media
-              </option>
+              <option value="Mixed Media">Mixed Media</option>
             </select>
 
             <input

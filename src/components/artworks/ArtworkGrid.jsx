@@ -12,6 +12,7 @@ import {
 import toast from "react-hot-toast";
 
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 export default function ArtworkGrid({
   artworks = [],
@@ -41,7 +42,7 @@ export default function ArtworkGrid({
         }
 
         const response = await fetch(
-          `http://localhost:5000/favorites/${encodeURIComponent(
+          `${API_URL}/favorites/${encodeURIComponent(
             data.user.email
           )}`,
           {
@@ -104,7 +105,7 @@ export default function ArtworkGrid({
 
       if (isFavorite) {
         const response = await fetch(
-          `http://localhost:5000/favorites/${artwork._id}/${encodeURIComponent(
+          `${API_URL}/favorites/${artwork._id}/${encodeURIComponent(
             session.user.email
           )}`,
           {
@@ -138,7 +139,7 @@ export default function ArtworkGrid({
         );
       } else {
         const response = await fetch(
-          "http://localhost:5000/favorites",
+          `${API_URL}/favorites`,
           {
             method: "POST",
 

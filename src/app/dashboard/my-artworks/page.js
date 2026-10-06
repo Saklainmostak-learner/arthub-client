@@ -16,6 +16,7 @@ import {
 import toast from "react-hot-toast";
 
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 export default function MyArtworksPage() {
   const router = useRouter();
@@ -25,7 +26,8 @@ export default function MyArtworksPage() {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const [deletingId, setDeletingId] = useState("");
+  const [deletingId, setDeletingId] =
+    useState("");
 
   const [artworkToDelete, setArtworkToDelete] =
     useState(null);
@@ -51,7 +53,7 @@ export default function MyArtworksPage() {
         setSession(data);
 
         const response = await fetch(
-          "http://localhost:5000/artworks",
+          `${API_URL}/artworks`,
           {
             cache: "no-store",
           }
@@ -98,6 +100,7 @@ export default function MyArtworksPage() {
       toast.error(
         "Sold artworks cannot be deleted."
       );
+
       return;
     }
 
@@ -127,16 +130,19 @@ export default function MyArtworksPage() {
     }
 
     try {
-      setDeletingId(artworkToDelete._id);
+      setDeletingId(
+        artworkToDelete._id
+      );
 
       const response = await fetch(
-        `http://localhost:5000/artworks/${artworkToDelete._id}`,
+        `${API_URL}/artworks/${artworkToDelete._id}`,
         {
           method: "DELETE",
         }
       );
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -304,7 +310,9 @@ export default function MyArtworksPage() {
 
                         {isSold && (
                           <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-300/30 bg-emerald-500/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-white">
-                            <BadgeCheck size={14} />
+                            <BadgeCheck
+                              size={14}
+                            />
                             Sold
                           </span>
                         )}
@@ -336,7 +344,9 @@ export default function MyArtworksPage() {
                           <>
                             <div className="mt-5 rounded-xl border border-emerald-500/15 bg-emerald-500/[0.06] px-4 py-3">
                               <p className="flex items-center gap-2 text-xs font-semibold text-emerald-300">
-                                <BadgeCheck size={15} />
+                                <BadgeCheck
+                                  size={15}
+                                />
                                 Artwork sold
                               </p>
 
@@ -353,7 +363,9 @@ export default function MyArtworksPage() {
                                 disabled
                                 className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-xs font-semibold text-slate-600"
                               >
-                                <Edit3 size={15} />
+                                <Edit3
+                                  size={15}
+                                />
                                 Edit
                               </button>
 
@@ -362,7 +374,9 @@ export default function MyArtworksPage() {
                                 disabled
                                 className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-xs font-semibold text-slate-600"
                               >
-                                <Trash2 size={15} />
+                                <Trash2
+                                  size={15}
+                                />
                                 Delete
                               </button>
                             </div>
@@ -373,7 +387,9 @@ export default function MyArtworksPage() {
                               href={`/dashboard/my-artworks/${artwork._id}/edit`}
                               className="flex items-center justify-center gap-2 rounded-xl border border-white/10 px-3 py-2.5 text-xs font-semibold text-white transition hover:border-[#F97316]/40 hover:bg-[#F97316]/10"
                             >
-                              <Edit3 size={15} />
+                              <Edit3
+                                size={15}
+                              />
                               Edit
                             </Link>
 
@@ -386,7 +402,9 @@ export default function MyArtworksPage() {
                               }
                               className="flex items-center justify-center gap-2 rounded-xl border border-red-500/20 px-3 py-2.5 text-xs font-semibold text-red-300 transition hover:bg-red-500/10"
                             >
-                              <Trash2 size={15} />
+                              <Trash2
+                                size={15}
+                              />
                               Delete
                             </button>
                           </div>
@@ -401,7 +419,6 @@ export default function MyArtworksPage() {
         </div>
       </main>
 
-      {/* Delete confirmation modal */}
       {artworkToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0d1928] p-6 text-white shadow-2xl">
@@ -413,7 +430,9 @@ export default function MyArtworksPage() {
               <button
                 type="button"
                 onClick={closeDeleteModal}
-                disabled={Boolean(deletingId)}
+                disabled={Boolean(
+                  deletingId
+                )}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-400 transition hover:bg-white/5 hover:text-white disabled:cursor-not-allowed"
               >
                 <X size={18} />
@@ -435,8 +454,12 @@ export default function MyArtworksPage() {
             <div className="mt-7 grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={closeDeleteModal}
-                disabled={Boolean(deletingId)}
+                onClick={
+                  closeDeleteModal
+                }
+                disabled={Boolean(
+                  deletingId
+                )}
                 className="rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
@@ -444,8 +467,12 @@ export default function MyArtworksPage() {
 
               <button
                 type="button"
-                onClick={handleDelete}
-                disabled={Boolean(deletingId)}
+                onClick={
+                  handleDelete
+                }
+                disabled={Boolean(
+                  deletingId
+                )}
                 className="flex items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {deletingId ? (
@@ -458,7 +485,9 @@ export default function MyArtworksPage() {
                   </>
                 ) : (
                   <>
-                    <Trash2 size={17} />
+                    <Trash2
+                      size={17}
+                    />
                     Delete
                   </>
                 )}
