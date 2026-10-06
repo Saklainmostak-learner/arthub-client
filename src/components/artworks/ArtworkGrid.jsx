@@ -9,6 +9,7 @@ import {
   Loader2,
   SearchX,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { authClient } from "@/lib/auth-client";
 
@@ -16,9 +17,11 @@ export default function ArtworkGrid({
   artworks = [],
 }) {
   const [session, setSession] = useState(null);
+
   const [favoriteIds, setFavoriteIds] = useState(
     new Set()
   );
+
   const [loadingFavoriteId, setLoadingFavoriteId] =
     useState("");
 
@@ -49,12 +52,18 @@ export default function ArtworkGrid({
         const result = await response.json();
 
         if (!response.ok) {
+          console.error(
+            "Failed to load favorites:",
+            result.message
+          );
+
           return;
         }
 
         const ids = new Set(
           (result.data || []).map(
-            (favorite) => favorite.artworkId
+            (favorite) =>
+              favorite.artworkId
           )
         );
 
@@ -72,12 +81,14 @@ export default function ArtworkGrid({
 
   const handleFavorite = async (artwork) => {
     if (!session?.user) {
+      toast.error("Please login first.");
+
       window.location.href = "/login";
       return;
     }
 
     if (session.user.role !== "user") {
-      alert(
+      toast.error(
         "Only art collectors can save favorites."
       );
       return;
@@ -87,7 +98,9 @@ export default function ArtworkGrid({
       favoriteIds.has(artwork._id);
 
     try {
-      setLoadingFavoriteId(artwork._id);
+      setLoadingFavoriteId(
+        artwork._id
+      );
 
       if (isFavorite) {
         const response = await fetch(
@@ -99,7 +112,8 @@ export default function ArtworkGrid({
           }
         );
 
-        const result = await response.json();
+        const result =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
@@ -109,10 +123,19 @@ export default function ArtworkGrid({
         }
 
         setFavoriteIds((previous) => {
-          const next = new Set(previous);
-          next.delete(artwork._id);
+          const next =
+            new Set(previous);
+
+          next.delete(
+            artwork._id
+          );
+
           return next;
         });
+
+        toast.success(
+          "Removed from favorites."
+        );
       } else {
         const response = await fetch(
           "http://localhost:5000/favorites",
@@ -120,18 +143,25 @@ export default function ArtworkGrid({
             method: "POST",
 
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type":
+                "application/json",
             },
 
             body: JSON.stringify({
-              artworkId: artwork._id,
-              userName: session.user.name,
-              userEmail: session.user.email,
+              artworkId:
+                artwork._id,
+
+              userName:
+                session.user.name,
+
+              userEmail:
+                session.user.email,
             }),
           }
         );
 
-        const result = await response.json();
+        const result =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
@@ -141,10 +171,19 @@ export default function ArtworkGrid({
         }
 
         setFavoriteIds((previous) => {
-          const next = new Set(previous);
-          next.add(artwork._id);
+          const next =
+            new Set(previous);
+
+          next.add(
+            artwork._id
+          );
+
           return next;
         });
+
+        toast.success(
+          "Added to favorites."
+        );
       }
     } catch (error) {
       console.error(
@@ -152,7 +191,7 @@ export default function ArtworkGrid({
         error
       );
 
-      alert(
+      toast.error(
         error.message ||
           "Something went wrong with favorites."
       );
@@ -173,8 +212,9 @@ export default function ArtworkGrid({
         </h2>
 
         <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
-          Try changing your search, category, or price
-          filters to discover more artwork.
+          Try changing your search,
+          category, or price filters to
+          discover more artwork.
         </p>
       </div>
     );
@@ -187,10 +227,13 @@ export default function ArtworkGrid({
           artwork.sold === true;
 
         const isFavorite =
-          favoriteIds.has(artwork._id);
+          favoriteIds.has(
+            artwork._id
+          );
 
         const isFavoriteLoading =
-          loadingFavoriteId === artwork._id;
+          loadingFavoriteId ===
+          artwork._id;
 
         return (
           <article
@@ -201,12 +244,15 @@ export default function ArtworkGrid({
               <Image
                 src={artwork.image}
                 alt={
-                  artwork.title || "Artwork"
+                  artwork.title ||
+                  "Artwork"
                 }
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 className={`object-cover transition duration-500 group-hover:scale-[1.04] ${
-                  isSold ? "opacity-70" : ""
+                  isSold
+                    ? "opacity-70"
+                    : ""
                 }`}
               />
 
@@ -216,7 +262,10 @@ export default function ArtworkGrid({
 
               {isSold && (
                 <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-white shadow-lg backdrop-blur">
-                  <BadgeCheck size={14} />
+                  <BadgeCheck
+                    size={14}
+                  />
+
                   Sold
                 </span>
               )}
@@ -224,9 +273,13 @@ export default function ArtworkGrid({
               <button
                 type="button"
                 onClick={() =>
-                  handleFavorite(artwork)
+                  handleFavorite(
+                    artwork
+                  )
                 }
-                disabled={isFavoriteLoading}
+                disabled={
+                  isFavoriteLoading
+                }
                 aria-label={
                   isFavorite
                     ? "Remove from favorites"
@@ -264,7 +317,10 @@ export default function ArtworkGrid({
                   </h2>
 
                   <p className="mt-1 truncate text-sm text-slate-400">
-                    by {artwork.artistName}
+                    by{" "}
+                    {
+                      artwork.artistName
+                    }
                   </p>
                 </div>
 
