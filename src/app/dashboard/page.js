@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import {
   Heart,
   Loader2,
   Palette,
   Plus,
+  ShieldCheck,
   ShoppingBag,
   Store,
   TrendingUp,
@@ -68,181 +70,156 @@ export default function DashboardPage() {
   const user =
     session.user;
 
+  const role =
+    user.role || "user";
+
+  if (role === "admin") {
+    return (
+      <main className="min-h-screen bg-[#07111f] px-4 py-12 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#F97316]">
+            Administration
+          </p>
+
+          <h1 className="mt-3 text-4xl font-bold sm:text-5xl">
+            Admin Dashboard
+          </h1>
+
+          <p className="mt-4 text-slate-400">
+            Welcome back,{" "}
+            <strong className="text-white">
+              {user.name}
+            </strong>
+            .
+          </p>
+
+          <Link
+            href="/dashboard/admin"
+            className="mt-10 block max-w-md rounded-2xl border border-[#F97316]/30 bg-[#0d1928] p-7 transition hover:-translate-y-1"
+          >
+            <ShieldCheck
+              size={26}
+              className="text-[#F97316]"
+            />
+
+            <h2 className="mt-5 text-xl font-bold">
+              Manage ArtHub
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Manage users, artworks,
+              transactions, roles, and platform
+              statistics.
+            </p>
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   const isArtist =
-    user.role === "artist";
+    role === "artist";
 
   return (
     <main className="min-h-screen bg-[#07111f] px-4 py-12 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#F97316]">
-            {isArtist
-              ? "Artist Studio"
-              : "Collector Space"}
-          </p>
+        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#F97316]">
+          {isArtist
+            ? "Artist Studio"
+            : "Collector Space"}
+        </p>
 
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            Dashboard
-          </h1>
+        <h1 className="mt-3 text-4xl font-bold sm:text-5xl">
+          Dashboard
+        </h1>
 
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
-            Welcome back,{" "}
-            <span className="font-semibold text-white">
-              {user.name}
-            </span>
-            .
-          </p>
-        </div>
-
-        <div className="mt-10 rounded-2xl border border-white/10 bg-[#0b1625] p-5">
-          <p className="text-sm text-slate-400">
-            Signed in as
-          </p>
-
-          <p className="mt-1 font-semibold">
+        <p className="mt-4 text-slate-400">
+          Welcome back,{" "}
+          <strong className="text-white">
             {user.name}
-          </p>
-
-          <p className="mt-1 text-sm text-slate-500">
-            {user.email}
-          </p>
-
-          <span className="mt-4 inline-flex rounded-full border border-[#F97316]/20 bg-[#F97316]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#F97316]">
-            {isArtist
-              ? "Artist"
-              : "Art Collector"}
-          </span>
-        </div>
+          </strong>
+          .
+        </p>
 
         {isArtist ? (
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <Link
+            <DashboardCard
               href="/artworks"
-              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
-            >
-              <Palette
-                className="text-[#F97316]"
-              />
+              icon={Palette}
+              title="Browse Artworks"
+              description="Explore the ArtHub marketplace."
+            />
 
-              <h2 className="mt-5 text-lg font-bold">
-                Browse Artworks
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Explore artworks from the
-                ArtHub community.
-              </p>
-            </Link>
-
-            <Link
+            <DashboardCard
               href="/dashboard/add-artwork"
-              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
-            >
-              <Plus
-                className="text-[#F97316]"
-              />
+              icon={Plus}
+              title="Add Artwork"
+              description="Publish a new original piece."
+            />
 
-              <h2 className="mt-5 text-lg font-bold">
-                Add Artwork
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Publish a new original piece.
-              </p>
-            </Link>
-
-            <Link
+            <DashboardCard
               href="/dashboard/my-artworks"
-              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
-            >
-              <Store
-                className="text-[#F97316]"
-              />
+              icon={Store}
+              title="Manage Artworks"
+              description="Edit and manage published work."
+            />
 
-              <h2 className="mt-5 text-lg font-bold">
-                Manage Artworks
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Edit and manage your published
-                work.
-              </p>
-            </Link>
-
-            <Link
+            <DashboardCard
               href="/dashboard/sales"
-              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-emerald-400/30"
-            >
-              <TrendingUp
-                className="text-emerald-400"
-              />
-
-              <h2 className="mt-5 text-lg font-bold">
-                Sales History
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Track sales, buyers, and
-                revenue.
-              </p>
-            </Link>
+              icon={TrendingUp}
+              title="Sales History"
+              description="Track sales and revenue."
+            />
           </div>
         ) : (
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <Link
+            <DashboardCard
               href="/artworks"
-              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
-            >
-              <Palette
-                className="text-[#F97316]"
-              />
+              icon={Palette}
+              title="Browse Artworks"
+              description="Discover original artwork."
+            />
 
-              <h2 className="mt-5 text-lg font-bold">
-                Browse Artworks
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Discover original artwork from
-                independent artists.
-              </p>
-            </Link>
-
-            <Link
+            <DashboardCard
               href="/dashboard/favorites"
-              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-pink-400/30"
-            >
-              <Heart
-                className="text-pink-400"
-              />
+              icon={Heart}
+              title="My Favorites"
+              description="Revisit saved artworks."
+            />
 
-              <h2 className="mt-5 text-lg font-bold">
-                My Favorites
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Revisit artwork you saved.
-              </p>
-            </Link>
-
-            <Link
+            <DashboardCard
               href="/dashboard/my-collection"
-              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-emerald-400/30"
-            >
-              <ShoppingBag
-                className="text-emerald-400"
-              />
-
-              <h2 className="mt-5 text-lg font-bold">
-                My Collection
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                View artworks you purchased.
-              </p>
-            </Link>
+              icon={ShoppingBag}
+              title="My Collection"
+              description="View purchased artworks."
+            />
           </div>
         )}
       </div>
     </main>
+  );
+}
+
+function DashboardCard({
+  href,
+  icon: Icon,
+  title,
+  description,
+}) {
+  return (
+    <Link
+      href={href}
+      className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
+    >
+      <Icon className="text-[#F97316]" />
+
+      <h2 className="mt-5 text-lg font-bold">
+        {title}
+      </h2>
+
+      <p className="mt-2 text-sm leading-6 text-slate-400">
+        {description}
+      </p>
+    </Link>
   );
 }
