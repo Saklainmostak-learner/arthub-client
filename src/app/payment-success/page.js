@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
@@ -12,7 +16,7 @@ import {
 
 import { API_URL } from "@/lib/api";
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
 
   const sessionId =
@@ -208,5 +212,36 @@ export default function PaymentSuccessPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function PaymentLoadingFallback() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#07111f] px-4 text-white">
+      <div className="text-center">
+        <Loader2
+          size={38}
+          className="mx-auto animate-spin text-[#F97316]"
+        />
+
+        <h1 className="mt-5 text-2xl font-bold">
+          Loading payment details
+        </h1>
+
+        <p className="mt-2 text-sm text-slate-400">
+          Preparing your payment confirmation...
+        </p>
+      </div>
+    </main>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense
+      fallback={<PaymentLoadingFallback />}
+    >
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }
