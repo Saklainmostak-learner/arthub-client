@@ -47,6 +47,7 @@ export default function ArtworkGrid({
           )}`,
           {
             cache: "no-store",
+            credentials: "include",
           }
         );
 
@@ -92,6 +93,7 @@ export default function ArtworkGrid({
       toast.error(
         "Only art collectors can save favorites."
       );
+
       return;
     }
 
@@ -110,6 +112,7 @@ export default function ArtworkGrid({
           )}`,
           {
             method: "DELETE",
+            credentials: "include",
           }
         );
 
@@ -143,6 +146,8 @@ export default function ArtworkGrid({
           {
             method: "POST",
 
+            credentials: "include",
+
             headers: {
               "Content-Type":
                 "application/json",
@@ -151,12 +156,6 @@ export default function ArtworkGrid({
             body: JSON.stringify({
               artworkId:
                 artwork._id,
-
-              userName:
-                session.user.name,
-
-              userEmail:
-                session.user.email,
             }),
           }
         );

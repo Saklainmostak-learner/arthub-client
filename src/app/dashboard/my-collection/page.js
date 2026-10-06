@@ -18,17 +18,16 @@ export default function MyCollectionPage() {
 
   const [session, setSession] = useState(null);
   const [purchases, setPurchases] = useState([]);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] =
+    useState(true);
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
   useEffect(() => {
     const loadCollection = async () => {
       try {
-        setIsLoading(true);
-        setErrorMessage("");
-
-        const { data } = await authClient.getSession();
+        const { data } =
+          await authClient.getSession();
 
         if (!data?.user) {
           router.push("/login");
@@ -48,25 +47,23 @@ export default function MyCollectionPage() {
           )}`,
           {
             cache: "no-store",
+            credentials: "include",
           }
         );
 
-        const result = await response.json();
+        const result =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
-            result.message ||
-              "Failed to load your collection."
+            result.message
           );
         }
 
-        setPurchases(result.data || []);
-      } catch (error) {
-        console.error(
-          "Load collection error:",
-          error
+        setPurchases(
+          result.data || []
         );
-
+      } catch (error) {
         setErrorMessage(
           error.message ||
             "Unable to load your collection."
@@ -81,14 +78,8 @@ export default function MyCollectionPage() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#07111f] px-4 text-white">
-        <div className="flex items-center gap-3 text-slate-400">
-          <Loader2
-            size={20}
-            className="animate-spin text-[#F97316]"
-          />
-          Loading your collection...
-        </div>
+      <main className="flex min-h-screen items-center justify-center bg-[#07111f]">
+        <Loader2 className="animate-spin text-[#F97316]" />
       </main>
     );
   }
@@ -98,140 +89,85 @@ export default function MyCollectionPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#07111f] px-4 py-10 text-white sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#07111f] px-4 py-10 text-white">
       <div className="mx-auto max-w-7xl">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
+          className="flex items-center gap-2 text-sm text-slate-400"
         >
           <ArrowLeft size={17} />
           Back to Dashboard
         </Link>
 
-        <div className="mt-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#F97316]">
-            Collector Space
-          </p>
-
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            My Collection
-          </h1>
-
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
-            Explore the original artworks you have
-            purchased through ArtHub.
-          </p>
-        </div>
-
-        <div className="mt-8 rounded-2xl border border-white/10 bg-[#0b1625] p-5">
-          <p className="text-sm text-slate-400">
-            Collector
-          </p>
-
-          <p className="mt-1 font-semibold text-white">
-            {session.user.name}
-          </p>
-
-          <p className="mt-1 text-sm text-slate-500">
-            {session.user.email}
-          </p>
-        </div>
+        <h1 className="mt-8 text-4xl font-bold">
+          My Collection
+        </h1>
 
         {errorMessage && (
-          <div className="mt-8 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="mt-8 rounded-xl bg-red-500/10 p-4 text-red-300">
             {errorMessage}
           </div>
         )}
 
         {!errorMessage &&
           purchases.length === 0 && (
-            <div className="mt-10 rounded-3xl border border-dashed border-white/10 bg-white/[0.025] px-6 py-16 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#F97316]/10 text-[#F97316]">
-                <ShoppingBag size={25} />
-              </div>
+            <div className="mt-10 rounded-3xl border border-dashed border-white/10 py-16 text-center">
+              <ShoppingBag className="mx-auto text-[#F97316]" />
 
-              <h2 className="mt-5 text-xl font-bold text-white">
+              <h2 className="mt-4 text-xl font-bold">
                 Your collection is empty
               </h2>
-
-              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-400">
-                Browse original artworks and purchase a
-                piece to start building your personal
-                collection.
-              </p>
-
-              <Link
-                href="/artworks"
-                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-3 text-sm font-semibold text-white"
-              >
-                Browse Artworks
-              </Link>
             </div>
           )}
 
-        {!errorMessage &&
-          purchases.length > 0 && (
-            <>
-              <p className="mt-10 text-sm text-slate-400">
-                You own{" "}
-                <span className="font-semibold text-white">
-                  {purchases.length}
-                </span>{" "}
-                {purchases.length === 1
-                  ? "artwork"
-                  : "artworks"}
-              </p>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {purchases.map(
+            (purchase) => {
+              const date =
+                purchase.purchasedAt
+                  ? new Date(
+                      purchase.purchasedAt
+                    ).toLocaleDateString()
+                  : "Unknown";
 
-              <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {purchases.map((purchase) => {
-                  const purchaseDate =
-                    purchase.purchasedAt
-                      ? new Date(
-                          purchase.purchasedAt
-                        ).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )
-                      : "Unknown";
+              return (
+                <article
+                  key={
+                    purchase._id
+                  }
+                  className="rounded-2xl border border-white/10 bg-[#0d1928] p-5"
+                >
+                  <ShoppingBag className="text-[#F97316]" />
 
-                  return (
-                    <article
-                      key={purchase._id}
-                      className="rounded-2xl border border-white/10 bg-[#0d1928] p-5"
-                    >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
-                        <ShoppingBag size={21} />
-                      </div>
+                  <h2 className="mt-5 text-xl font-bold">
+                    {
+                      purchase.artworkTitle
+                    }
+                  </h2>
 
-                      <h2 className="mt-5 text-xl font-bold text-white">
-                        {purchase.artworkTitle}
-                      </h2>
+                  <p className="mt-2 text-slate-400">
+                    by{" "}
+                    {
+                      purchase.artistName
+                    }
+                  </p>
 
-                      <p className="mt-2 text-sm text-slate-400">
-                        by {purchase.artistName}
-                      </p>
+                  <p className="mt-5 text-2xl font-bold text-[#F97316]">
+                    $
+                    {Number(
+                      purchase.amount
+                    ).toFixed(2)}
+                  </p>
 
-                      <p className="mt-5 text-2xl font-bold text-[#F97316]">
-                        $
-                        {Number(
-                          purchase.amount
-                        ).toFixed(2)}
-                      </p>
-
-                      <div className="mt-5 flex items-center gap-2 border-t border-white/10 pt-4 text-xs text-slate-500">
-                        <CalendarDays size={15} />
-                        Purchased {purchaseDate}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </>
+                  <p className="mt-5 flex items-center gap-2 border-t border-white/10 pt-4 text-xs text-slate-500">
+                    <CalendarDays size={15} />
+                    Purchased {date}
+                  </p>
+                </article>
+              );
+            }
           )}
+        </div>
       </div>
     </main>
   );

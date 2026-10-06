@@ -23,19 +23,13 @@ import { API_URL } from "@/lib/api";
 export default function EditArtworkPage() {
   const router = useRouter();
   const params = useParams();
-
   const id = params?.id;
 
   const [session, setSession] = useState(null);
-
   const [isLoading, setIsLoading] =
     useState(true);
-
   const [isSubmitting, setIsSubmitting] =
     useState(false);
-
-  const [errorMessage, setErrorMessage] =
-    useState("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -48,9 +42,6 @@ export default function EditArtworkPage() {
   useEffect(() => {
     const loadPage = async () => {
       try {
-        setIsLoading(true);
-        setErrorMessage("");
-
         const { data } =
           await authClient.getSession();
 
@@ -78,16 +69,19 @@ export default function EditArtworkPage() {
 
         if (!response.ok) {
           throw new Error(
-            result.message ||
-              "Failed to load artwork."
+            result.message
           );
         }
 
         const artwork = result.data;
 
         if (
-          artwork.artistEmail !==
+          artwork.artistEmail
+            ?.trim()
+            .toLowerCase() !==
           data.user.email
+            ?.trim()
+            .toLowerCase()
         ) {
           toast.error(
             "You can only edit your own artworks."
@@ -100,7 +94,7 @@ export default function EditArtworkPage() {
           return;
         }
 
-        if (artwork.sold === true) {
+        if (artwork.sold) {
           toast.error(
             "Sold artworks cannot be edited."
           );
@@ -115,30 +109,20 @@ export default function EditArtworkPage() {
         setFormData({
           title:
             artwork.title || "",
-
           image:
             artwork.image || "",
-
           category:
             artwork.category || "",
-
           price:
-            artwork.price !== undefined
-              ? String(
-                  artwork.price
-                )
-              : "",
-
+            String(
+              artwork.price ?? ""
+            ),
           description:
-            artwork.description || "",
+            artwork.description ||
+            "",
         });
       } catch (error) {
-        console.error(
-          "Failed to load artwork:",
-          error
-        );
-
-        setErrorMessage(
+        toast.error(
           error.message ||
             "Unable to load artwork."
         );
@@ -158,53 +142,40 @@ export default function EditArtworkPage() {
       value,
     } = event.target;
 
+    if (name === "price") {
+      if (
+        value === "" ||
+        /^\d*\.?\d{0,2}$/.test(
+          value
+        )
+      ) {
+        setFormData((previous) => ({
+          ...previous,
+          price: value,
+        }));
+      }
+
+      return;
+    }
+
     setFormData((previous) => ({
       ...previous,
       [name]: value,
     }));
   };
 
-  const handlePriceChange = (event) => {
-    const value =
-      event.target.value;
-
-    const decimalPattern =
-      /^\d*\.?\d{0,2}$/;
-
-    if (
-      value === "" ||
-      decimalPattern.test(value)
-    ) {
-      setFormData((previous) => ({
-        ...previous,
-        price: value,
-      }));
-    }
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    setErrorMessage("");
-
-    if (!session?.user) {
-      toast.error(
-        "Please sign in again."
-      );
-
-      return;
-    }
-
-    const numericPrice =
+    const price =
       Number(formData.price);
 
     if (
-      formData.price.trim() === "" ||
-      Number.isNaN(numericPrice) ||
-      numericPrice <= 0
+      !Number.isFinite(price) ||
+      price <= 0
     ) {
       toast.error(
-        "Please enter a valid price greater than 0."
+        "Enter a valid price."
       );
 
       return;
@@ -213,42 +184,29 @@ export default function EditArtworkPage() {
     try {
       setIsSubmitting(true);
 
-      const updatedArtwork = {
-        title:
-          formData.title.trim(),
-
-        image:
-          formData.image.trim(),
-
-        category:
-          formData.category,
-
-        price:
-          numericPrice,
-
-        description:
-          formData.description.trim(),
-
-        artistName:
-          session.user.name,
-
-        artistEmail:
-          session.user.email,
-      };
-
       const response = await fetch(
         `${API_URL}/artworks/${id}`,
         {
           method: "PUT",
+
+          credentials: "include",
 
           headers: {
             "Content-Type":
               "application/json",
           },
 
-          body: JSON.stringify(
-            updatedArtwork
-          ),
+          body: JSON.stringify({
+            title:
+              formData.title.trim(),
+            image:
+              formData.image.trim(),
+            category:
+              formData.category,
+            price,
+            description:
+              formData.description.trim(),
+          }),
         }
       );
 
@@ -257,8 +215,7 @@ export default function EditArtworkPage() {
 
       if (!response.ok) {
         throw new Error(
-          result.message ||
-            "Failed to update artwork."
+          result.message
         );
       }
 
@@ -272,18 +229,10 @@ export default function EditArtworkPage() {
 
       router.refresh();
     } catch (error) {
-      console.error(
-        "Update artwork error:",
-        error
-      );
-
-      const message =
+      toast.error(
         error.message ||
-        "Something went wrong while updating the artwork.";
-
-      setErrorMessage(message);
-
-      toast.error(message);
+          "Unable to update artwork."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -291,15 +240,8 @@ export default function EditArtworkPage() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#07111f] px-4">
-        <div className="flex items-center gap-3 text-slate-400">
-          <Loader2
-            size={20}
-            className="animate-spin text-[#F97316]"
-          />
-
-          Loading artwork...
-        </div>
+      <main className="flex min-h-screen items-center justify-center bg-[#07111f]">
+        <Loader2 className="animate-spin text-[#F97316]" />
       </main>
     );
   }
@@ -309,270 +251,154 @@ export default function EditArtworkPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#07111f] px-4 py-10 text-white sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#07111f] px-4 py-10 text-white">
       <div className="mx-auto max-w-4xl">
         <Link
           href="/dashboard/my-artworks"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
+          className="flex items-center gap-2 text-sm text-slate-400"
         >
           <ArrowLeft size={17} />
           Back to Manage Artworks
         </Link>
 
-        <div className="mt-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#F97316]">
-            Artist Studio
-          </p>
+        <h1 className="mt-8 text-4xl font-bold">
+          Edit Artwork
+        </h1>
 
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-            Edit Artwork
-          </h1>
+        <form
+          onSubmit={handleSubmit}
+          className="mt-10 space-y-6 rounded-3xl border border-white/10 bg-[#0b1625] p-6"
+        >
+          <div>
+            <label className="mb-2 block text-sm">
+              Title
+            </label>
 
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
-            Update the details of your published
-            artwork.
-          </p>
-        </div>
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3">
+              <Palette size={18} />
 
-        <div className="mt-10 rounded-[2rem] border border-white/10 bg-[#0b1625] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.25)] sm:p-8">
-          <div className="mb-8 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#8B5CF6] via-[#EC4899] to-[#F97316] font-bold text-white">
-              {session.user.name
-                ?.charAt(0)
-                ?.toUpperCase() || "A"}
-            </div>
-
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-white">
-                {session.user.name}
-              </p>
-
-              <p className="truncate text-sm text-slate-400">
-                {session.user.email}
-              </p>
+              <input
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="w-full bg-transparent outline-none"
+              />
             </div>
           </div>
 
-          {errorMessage && (
-            <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {errorMessage}
-            </div>
-          )}
+          <div>
+            <label className="mb-2 block text-sm">
+              Image URL
+            </label>
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
-            <div>
-              <label
-                htmlFor="title"
-                className="mb-2 block text-sm font-medium text-slate-300"
-              >
-                Artwork Title
-              </label>
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3">
+              <ImageIcon size={18} />
 
-              <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                <Palette
-                  size={18}
-                  className="shrink-0 text-slate-500"
-                />
-
-                <input
-                  id="title"
-                  name="title"
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={handleChange}
-                  className="w-full bg-transparent text-sm text-white outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="image"
-                className="mb-2 block text-sm font-medium text-slate-300"
-              >
-                Artwork Image URL
-              </label>
-
-              <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                <ImageIcon
-                  size={18}
-                  className="shrink-0 text-slate-500"
-                />
-
-                <input
-                  id="image"
-                  name="image"
-                  type="url"
-                  required
-                  value={formData.image}
-                  onChange={handleChange}
-                  className="w-full bg-transparent text-sm text-white outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="category"
-                  className="mb-2 block text-sm font-medium text-slate-300"
-                >
-                  Category
-                </label>
-
-                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                  <Tag
-                    size={18}
-                    className="shrink-0 text-slate-500"
-                  />
-
-                  <select
-                    id="category"
-                    name="category"
-                    required
-                    value={
-                      formData.category
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    className="w-full bg-[#081321] text-sm text-white outline-none"
-                  >
-                    <option value="">
-                      Select Category
-                    </option>
-
-                    <option value="Painting">
-                      Painting
-                    </option>
-
-                    <option value="Digital Art">
-                      Digital Art
-                    </option>
-
-                    <option value="Sculpture">
-                      Sculpture
-                    </option>
-
-                    <option value="Photography">
-                      Photography
-                    </option>
-
-                    <option value="Drawing">
-                      Drawing
-                    </option>
-
-                    <option value="Mixed Media">
-                      Mixed Media
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="price"
-                  className="mb-2 block text-sm font-medium text-slate-300"
-                >
-                  Price ($)
-                </label>
-
-                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                  <span className="shrink-0 text-slate-500">
-                    $
-                  </span>
-
-                  <input
-                    id="price"
-                    name="price"
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    required
-                    value={
-                      formData.price
-                    }
-                    onChange={
-                      handlePriceChange
-                    }
-                    placeholder="250"
-                    className="w-full bg-transparent text-sm text-white caret-white outline-none placeholder:text-slate-500"
-                  />
-                </div>
-
-                <p className="mt-2 text-xs text-slate-500">
-                  Enter a price greater than $0.
-                  Up to two decimal places.
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="description"
-                className="mb-2 block text-sm font-medium text-slate-300"
-              >
-                Description
-              </label>
-
-              <textarea
-                id="description"
-                name="description"
-                rows={6}
+              <input
+                name="image"
+                type="url"
+                value={formData.image}
+                onChange={handleChange}
                 required
-                value={
-                  formData.description
-                }
-                onChange={
-                  handleChange
-                }
-                className="w-full resize-none rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 text-sm leading-6 text-white outline-none focus:border-[#F97316]/50"
+                className="w-full bg-transparent outline-none"
               />
             </div>
+          </div>
 
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-4">
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <User
-                  size={17}
-                  className="text-[#F97316]"
-                />
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm">
+                Category
+              </label>
 
-                <span>
-                  Editing as{" "}
-                  <strong className="text-white">
-                    {session.user.name}
-                  </strong>
-                </span>
+              <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3">
+                <Tag size={18} />
+
+                <select
+                  name="category"
+                  value={
+                    formData.category
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  required
+                  className="w-full bg-[#081321] outline-none"
+                >
+                  <option value="Painting">
+                    Painting
+                  </option>
+                  <option value="Digital Art">
+                    Digital Art
+                  </option>
+                  <option value="Sculpture">
+                    Sculpture
+                  </option>
+                  <option value="Photography">
+                    Photography
+                  </option>
+                  <option value="Drawing">
+                    Drawing
+                  </option>
+                  <option value="Mixed Media">
+                    Mixed Media
+                  </option>
+                </select>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2
-                    size={18}
-                    className="animate-spin"
-                  />
+            <div>
+              <label className="mb-2 block text-sm">
+                Price
+              </label>
 
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Save size={18} />
-                  Update Artwork
-                </>
-              )}
-            </button>
-          </form>
-        </div>
+              <input
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                inputMode="decimal"
+                required
+                className="w-full rounded-xl border border-white/10 bg-[#081321] px-4 py-3 outline-none"
+              />
+            </div>
+          </div>
+
+          <textarea
+            name="description"
+            value={
+              formData.description
+            }
+            onChange={
+              handleChange
+            }
+            rows={6}
+            required
+            className="w-full rounded-xl border border-white/10 bg-[#081321] px-4 py-3 outline-none"
+          />
+
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <User size={17} />
+            Editing as{" "}
+            {session.user.name}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] py-4 font-semibold"
+          >
+            {isSubmitting ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Save size={18} />
+            )}
+
+            {isSubmitting
+              ? "Updating..."
+              : "Update Artwork"}
+          </button>
+        </form>
       </div>
     </main>
   );

@@ -137,18 +137,14 @@ export default function AddArtworkPage() {
 
         description:
           formData.description.trim(),
-
-        artistName:
-          session.user.name,
-
-        artistEmail:
-          session.user.email,
       };
 
       const response = await fetch(
         `${API_URL}/artworks`,
         {
           method: "POST",
+
+          credentials: "include",
 
           headers: {
             "Content-Type":
@@ -186,6 +182,8 @@ export default function AddArtworkPage() {
       router.push(
         "/dashboard/my-artworks"
       );
+
+      router.refresh();
     } catch (error) {
       console.error(
         "Add artwork error:",
@@ -404,12 +402,6 @@ export default function AddArtworkPage() {
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
                 </div>
-
-                <p className="mt-2 text-xs text-slate-500">
-                  Enter a price greater than
-                  $0. You can use up to two
-                  decimal places.
-                </p>
               </div>
             </div>
 
@@ -440,12 +432,10 @@ export default function AddArtworkPage() {
                   className="text-[#F97316]"
                 />
 
-                <span>
-                  Publishing as{" "}
-                  <strong className="text-white">
-                    {session.user.name}
-                  </strong>
-                </span>
+                Publishing as{" "}
+                <strong className="text-white">
+                  {session.user.name}
+                </strong>
               </div>
             </div>
 
