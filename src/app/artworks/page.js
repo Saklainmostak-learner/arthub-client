@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 
 import ArtworkGrid from "@/components/artworks/ArtworkGrid";
 
@@ -22,9 +26,12 @@ export default function ArtworksPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const response = await fetch("http://localhost:5000/artworks", {
-          cache: "no-store",
-        });
+        const response = await fetch(
+          "http://localhost:5000/artworks",
+          {
+            cache: "no-store",
+          }
+        );
 
         const result = await response.json();
 
@@ -53,11 +60,15 @@ export default function ArtworksPage() {
   const filteredArtworks = useMemo(() => {
     let result = [...artworks];
 
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const normalizedSearch = searchTerm
+      .trim()
+      .toLowerCase();
 
     if (normalizedSearch) {
       result = result.filter((artwork) => {
-        const title = artwork.title?.toLowerCase() || "";
+        const title =
+          artwork.title?.toLowerCase() || "";
+
         const artistName =
           artwork.artistName?.toLowerCase() || "";
 
@@ -90,13 +101,15 @@ export default function ArtworksPage() {
 
     if (sortOption === "price-low") {
       result.sort(
-        (a, b) => Number(a.price) - Number(b.price)
+        (a, b) =>
+          Number(a.price) - Number(b.price)
       );
     }
 
     if (sortOption === "price-high") {
       result.sort(
-        (a, b) => Number(b.price) - Number(a.price)
+        (a, b) =>
+          Number(b.price) - Number(a.price)
       );
     }
 
@@ -121,7 +134,6 @@ export default function ArtworksPage() {
   return (
     <main className="min-h-screen bg-[#07111f] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* Heading */}
         <div className="mb-10 max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#F97316]">
             Explore the Collection
@@ -132,15 +144,13 @@ export default function ArtworksPage() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
-            Discover original works from independent artists and
-            explore pieces across different styles, mediums, and
-            price ranges.
+            Discover original works from independent artists
+            and explore pieces across different styles,
+            mediums, and price ranges.
           </p>
         </div>
 
-        {/* Search + Filters */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] sm:p-5">
-          {/* Search */}
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0b1625] px-4 py-3.5 focus-within:border-[#F97316]/50">
             <Search
               size={19}
@@ -167,7 +177,6 @@ export default function ArtworksPage() {
           </div>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Category */}
             <select
               value={category}
               onChange={(event) =>
@@ -190,7 +199,6 @@ export default function ArtworksPage() {
               </option>
             </select>
 
-            {/* Minimum Price */}
             <input
               type="number"
               min="0"
@@ -202,7 +210,6 @@ export default function ArtworksPage() {
               className="rounded-xl border border-white/10 bg-[#0b1625] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 transition focus:border-[#F97316]/50"
             />
 
-            {/* Maximum Price */}
             <input
               type="number"
               min="0"
@@ -214,7 +221,6 @@ export default function ArtworksPage() {
               className="rounded-xl border border-white/10 bg-[#0b1625] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 transition focus:border-[#F97316]/50"
             />
 
-            {/* Sorting */}
             <select
               value={sortOption}
               onChange={(event) =>
@@ -233,7 +239,6 @@ export default function ArtworksPage() {
           </div>
         </div>
 
-        {/* Loading */}
         {isLoading && (
           <div className="flex min-h-[350px] items-center justify-center">
             <div className="flex items-center gap-3 text-sm text-slate-400">
@@ -246,14 +251,12 @@ export default function ArtworksPage() {
           </div>
         )}
 
-        {/* Error */}
         {!isLoading && errorMessage && (
           <div className="mt-10 rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-300">
             {errorMessage}
           </div>
         )}
 
-        {/* Artwork Results */}
         {!isLoading && !errorMessage && (
           <>
             <div className="mb-5 mt-10">
