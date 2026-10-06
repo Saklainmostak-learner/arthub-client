@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Loader2,
   Search,
@@ -8,18 +12,36 @@ import {
 } from "lucide-react";
 
 import ArtworkGrid from "@/components/artworks/ArtworkGrid";
+import Pagination from "@/components/artworks/Pagination";
 import { API_URL } from "@/lib/api";
+
+const ITEMS_PER_PAGE = 8;
 
 export default function ArtworksPage() {
   const [artworks, setArtworks] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] =
+    useState(true);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [category, setCategory] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [sortOption, setSortOption] = useState("newest");
+  const [errorMessage, setErrorMessage] =
+    useState("");
+
+  const [searchTerm, setSearchTerm] =
+    useState("");
+
+  const [category, setCategory] =
+    useState("");
+
+  const [minPrice, setMinPrice] =
+    useState("");
+
+  const [maxPrice, setMaxPrice] =
+    useState("");
+
+  const [sortOption, setSortOption] =
+    useState("newest");
+
+  const [currentPage, setCurrentPage] =
+    useState(1);
 
   useEffect(() => {
     const loadArtworks = async () => {
@@ -27,21 +49,29 @@ export default function ArtworksPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const response = await fetch(`${API_URL}/artworks`, {
-          cache: "no-store",
-        });
+        const response = await fetch(
+          `${API_URL}/artworks`,
+          {
+            cache: "no-store",
+          }
+        );
 
-        const result = await response.json();
+        const result =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
-            result.message || "Failed to load artworks."
+            result.message ||
+              "Failed to load artworks."
           );
         }
 
         setArtworks(result.data || []);
       } catch (error) {
-        console.error("Failed to fetch artworks:", error);
+        console.error(
+          "Failed to fetch artworks:",
+          error
+        );
 
         setErrorMessage(
           error.message ||
@@ -55,60 +85,98 @@ export default function ArtworksPage() {
     loadArtworks();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    category,
+    minPrice,
+    maxPrice,
+    sortOption,
+  ]);
+
   const filteredArtworks = useMemo(() => {
     let result = [...artworks];
 
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const normalizedSearch =
+      searchTerm
+        .trim()
+        .toLowerCase();
 
     if (normalizedSearch) {
-      result = result.filter((artwork) => {
-        const title = artwork.title?.toLowerCase() || "";
-        const artistName = artwork.artistName?.toLowerCase() || "";
+      result = result.filter(
+        (artwork) => {
+          const title =
+            artwork.title
+              ?.toLowerCase() ||
+            "";
 
-        return (
-          title.includes(normalizedSearch) ||
-          artistName.includes(normalizedSearch)
-        );
-      });
+          const artistName =
+            artwork.artistName
+              ?.toLowerCase() ||
+            "";
+
+          return (
+            title.includes(
+              normalizedSearch
+            ) ||
+            artistName.includes(
+              normalizedSearch
+            )
+          );
+        }
+      );
     }
 
     if (category) {
       result = result.filter(
-        (artwork) => artwork.category === category
+        (artwork) =>
+          artwork.category ===
+          category
       );
     }
 
     if (minPrice !== "") {
       result = result.filter(
         (artwork) =>
-          Number(artwork.price) >= Number(minPrice)
+          Number(artwork.price) >=
+          Number(minPrice)
       );
     }
 
     if (maxPrice !== "") {
       result = result.filter(
         (artwork) =>
-          Number(artwork.price) <= Number(maxPrice)
+          Number(artwork.price) <=
+          Number(maxPrice)
       );
     }
 
     if (sortOption === "price-low") {
       result.sort(
-        (a, b) => Number(a.price) - Number(b.price)
+        (a, b) =>
+          Number(a.price) -
+          Number(b.price)
       );
     }
 
     if (sortOption === "price-high") {
       result.sort(
-        (a, b) => Number(b.price) - Number(a.price)
+        (a, b) =>
+          Number(b.price) -
+          Number(a.price)
       );
     }
 
     if (sortOption === "newest") {
       result.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
+          new Date(
+            b.createdAt
+          ).getTime() -
+          new Date(
+            a.createdAt
+          ).getTime()
       );
     }
 
@@ -121,6 +189,47 @@ export default function ArtworksPage() {
     maxPrice,
     sortOption,
   ]);
+
+  const totalPages = Math.ceil(
+    filteredArtworks.length /
+      ITEMS_PER_PAGE
+  );
+
+  const safeCurrentPage =
+    totalPages > 0
+      ? Math.min(
+          currentPage,
+          totalPages
+        )
+      : 1;
+
+  const startIndex =
+    (safeCurrentPage - 1) *
+    ITEMS_PER_PAGE;
+
+  const paginatedArtworks =
+    filteredArtworks.slice(
+      startIndex,
+      startIndex +
+        ITEMS_PER_PAGE
+    );
+
+  const handlePageChange = (page) => {
+    if (
+      page < 1 ||
+      page > totalPages ||
+      page === currentPage
+    ) {
+      return;
+    }
+
+    setCurrentPage(page);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <main className="min-h-screen bg-[#07111f] px-4 py-12 sm:px-6 lg:px-8">
@@ -135,8 +244,9 @@ export default function ArtworksPage() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
-            Discover original works from independent artists
-            and explore pieces across different styles,
+            Discover original works from
+            independent artists and explore
+            pieces across different styles,
             mediums, and price ranges.
           </p>
         </div>
@@ -152,7 +262,9 @@ export default function ArtworksPage() {
               type="text"
               value={searchTerm}
               onChange={(event) =>
-                setSearchTerm(event.target.value)
+                setSearchTerm(
+                  event.target.value
+                )
               }
               placeholder="Search by artwork title or artist..."
               className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
@@ -164,6 +276,7 @@ export default function ArtworksPage() {
               size={17}
               className="text-[#F97316]"
             />
+
             Filters
           </div>
 
@@ -171,17 +284,39 @@ export default function ArtworksPage() {
             <select
               value={category}
               onChange={(event) =>
-                setCategory(event.target.value)
+                setCategory(
+                  event.target.value
+                )
               }
               className="rounded-xl border border-white/10 bg-[#0b1625] px-4 py-3 text-sm text-white outline-none transition focus:border-[#F97316]/50"
             >
-              <option value="">All Categories</option>
-              <option value="Painting">Painting</option>
-              <option value="Digital Art">Digital Art</option>
-              <option value="Sculpture">Sculpture</option>
-              <option value="Photography">Photography</option>
-              <option value="Drawing">Drawing</option>
-              <option value="Mixed Media">Mixed Media</option>
+              <option value="">
+                All Categories
+              </option>
+
+              <option value="Painting">
+                Painting
+              </option>
+
+              <option value="Digital Art">
+                Digital Art
+              </option>
+
+              <option value="Sculpture">
+                Sculpture
+              </option>
+
+              <option value="Photography">
+                Photography
+              </option>
+
+              <option value="Drawing">
+                Drawing
+              </option>
+
+              <option value="Mixed Media">
+                Mixed Media
+              </option>
             </select>
 
             <input
@@ -189,7 +324,9 @@ export default function ArtworksPage() {
               min="0"
               value={minPrice}
               onChange={(event) =>
-                setMinPrice(event.target.value)
+                setMinPrice(
+                  event.target.value
+                )
               }
               placeholder="Min price"
               className="rounded-xl border border-white/10 bg-[#0b1625] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 transition focus:border-[#F97316]/50"
@@ -200,7 +337,9 @@ export default function ArtworksPage() {
               min="0"
               value={maxPrice}
               onChange={(event) =>
-                setMaxPrice(event.target.value)
+                setMaxPrice(
+                  event.target.value
+                )
               }
               placeholder="Max price"
               className="rounded-xl border border-white/10 bg-[#0b1625] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 transition focus:border-[#F97316]/50"
@@ -209,14 +348,20 @@ export default function ArtworksPage() {
             <select
               value={sortOption}
               onChange={(event) =>
-                setSortOption(event.target.value)
+                setSortOption(
+                  event.target.value
+                )
               }
               className="rounded-xl border border-white/10 bg-[#0b1625] px-4 py-3 text-sm text-white outline-none transition focus:border-[#F97316]/50"
             >
-              <option value="newest">Newest</option>
+              <option value="newest">
+                Newest
+              </option>
+
               <option value="price-low">
                 Price: Low to High
               </option>
+
               <option value="price-high">
                 Price: High to Low
               </option>
@@ -236,29 +381,66 @@ export default function ArtworksPage() {
           </div>
         )}
 
-        {!isLoading && errorMessage && (
-          <div className="mt-10 rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-300">
-            {errorMessage}
-          </div>
-        )}
-
-        {!isLoading && !errorMessage && (
-          <>
-            <div className="mb-5 mt-10">
-              <p className="text-sm text-slate-400">
-                Showing{" "}
-                <span className="font-semibold text-white">
-                  {filteredArtworks.length}
-                </span>{" "}
-                {filteredArtworks.length === 1
-                  ? "artwork"
-                  : "artworks"}
-              </p>
+        {!isLoading &&
+          errorMessage && (
+            <div className="mt-10 rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-300">
+              {errorMessage}
             </div>
+          )}
 
-            <ArtworkGrid artworks={filteredArtworks} />
-          </>
-        )}
+        {!isLoading &&
+          !errorMessage && (
+            <>
+              <div className="mb-5 mt-10 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-400">
+                  Showing{" "}
+                  <span className="font-semibold text-white">
+                    {
+                      paginatedArtworks.length
+                    }
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-white">
+                    {
+                      filteredArtworks.length
+                    }
+                  </span>{" "}
+                  {filteredArtworks.length ===
+                  1
+                    ? "artwork"
+                    : "artworks"}
+                </p>
+
+                {totalPages > 1 && (
+                  <p className="text-xs text-slate-500">
+                    Page{" "}
+                    {
+                      safeCurrentPage
+                    }{" "}
+                    of {totalPages}
+                  </p>
+                )}
+              </div>
+
+              <ArtworkGrid
+                artworks={
+                  paginatedArtworks
+                }
+              />
+
+              <Pagination
+                currentPage={
+                  safeCurrentPage
+                }
+                totalPages={
+                  totalPages
+                }
+                onPageChange={
+                  handlePageChange
+                }
+              />
+            </>
+          )}
       </div>
     </main>
   );
