@@ -3,40 +3,181 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Eye,
   EyeOff,
+  Loader2,
   LockKeyhole,
   Mail,
   UserRound,
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
+import toast from "react-hot-toast";
+
+import { authClient } from "@/lib/auth-client";
 
 const REGISTER_IMAGE = "/register-image.png";
 
 export default function RegisterPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [role, setRole] = useState("user");
+  const router = useRouter();
 
-  const handleSubmit = (event) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
+
+  const [role, setRole] = useState("user");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] =
+    useState(false);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // Better Auth registration logic will be connected later.
+    const formData = new FormData(event.currentTarget);
+
+    const name = String(
+      formData.get("name") || ""
+    ).trim();
+
+    const email = String(
+      formData.get("email") || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    const password = String(
+      formData.get("password") || ""
+    );
+
+    const confirmPassword = String(
+      formData.get("confirmPassword") || ""
+    );
+
+    if (!name) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+
+    if (!email) {
+      toast.error("Please enter your email.");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error(
+        "Password must be at least 6 characters."
+      );
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      toast.error(
+        "Password must contain at least one uppercase letter."
+      );
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      toast.error(
+        "Password must contain at least one lowercase letter."
+      );
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const { data, error } =
+        await authClient.signUp.email({
+          name,
+          email,
+          password,
+          role,
+        });
+
+      if (error) {
+        throw new Error(
+          error.message ||
+            "Unable to create your account."
+        );
+      }
+
+      if (!data) {
+        throw new Error(
+          "Account creation did not complete."
+        );
+      }
+
+      toast.success(
+        "Account created successfully."
+      );
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      console.error("Register error:", error);
+
+      toast.error(
+        error.message ||
+          "Something went wrong while creating your account."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleGoogleRegister = () => {
-    // Google OAuth registration will be connected later.
+  const handleGoogleRegister = async () => {
+    try {
+      setIsGoogleLoading(true);
+
+      const callbackURL =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/dashboard`
+          : "/dashboard";
+
+      const { error } =
+        await authClient.signIn.social({
+          provider: "google",
+          callbackURL,
+        });
+
+      if (error) {
+        throw new Error(
+          error.message ||
+            "Google sign up could not be started."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Google register error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+          "Google sign up could not be started."
+      );
+
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
     <main className="min-h-screen bg-[#07111f] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b1625] shadow-[0_30px_90px_rgba(0,0,0,0.32)] lg:grid-cols-[0.95fr_1.05fr]">
-        {/* Left Side - Register Form */}
         <section className="flex items-center px-6 py-10 sm:px-10 lg:px-14">
           <div className="mx-auto w-full max-w-md">
-            <Link href="/" className="inline-flex items-center">
+            <Link
+              href="/"
+              className="inline-flex items-center"
+            >
               <Image
                 src="/arthub-logo-nav.png"
                 alt="ArtHub"
@@ -57,22 +198,32 @@ export default function RegisterPage() {
               </h1>
 
               <p className="mt-4 text-sm leading-6 text-slate-400">
-                Join as a collector or artist and become part of a growing
-                marketplace for original artwork.
+                Join as a collector or artist and become
+                part of a growing marketplace for original
+                artwork.
               </p>
             </div>
 
-            {/* Google Register */}
             <button
               type="button"
               onClick={handleGoogleRegister}
-              className="mt-7 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.07]"
+              disabled={isGoogleLoading}
+              className="mt-7 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <FaGoogle size={17} />
-              Continue with Google
+              {isGoogleLoading ? (
+                <Loader2
+                  size={17}
+                  className="animate-spin"
+                />
+              ) : (
+                <FaGoogle size={17} />
+              )}
+
+              {isGoogleLoading
+                ? "Opening Google..."
+                : "Continue with Google"}
             </button>
 
-            {/* Divider */}
             <div className="my-6 flex items-center gap-4">
               <div className="h-px flex-1 bg-white/10" />
 
@@ -83,9 +234,10 @@ export default function RegisterPage() {
               <div className="h-px flex-1 bg-white/10" />
             </div>
 
-            {/* Register Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Full Name */}
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+            >
               <div>
                 <label
                   htmlFor="name"
@@ -105,13 +257,13 @@ export default function RegisterPage() {
                     type="text"
                     name="name"
                     required
+                    autoComplete="name"
                     placeholder="Enter your full name"
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
                 </div>
               </div>
 
-              {/* Email */}
               <div>
                 <label
                   htmlFor="email"
@@ -121,20 +273,23 @@ export default function RegisterPage() {
                 </label>
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                  <Mail size={18} className="shrink-0 text-slate-500" />
+                  <Mail
+                    size={18}
+                    className="shrink-0 text-slate-500"
+                  />
 
                   <input
                     id="email"
                     type="email"
                     name="email"
                     required
+                    autoComplete="email"
                     placeholder="you@example.com"
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
                 </div>
               </div>
 
-              {/* Password */}
               <div>
                 <label
                   htmlFor="password"
@@ -151,19 +306,31 @@ export default function RegisterPage() {
 
                   <input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
                     name="password"
                     required
+                    minLength={6}
+                    autoComplete="new-password"
                     placeholder="Create a password"
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
 
                   <button
                     type="button"
-                    onClick={() => setShowPassword((current) => !current)}
+                    onClick={() =>
+                      setShowPassword(
+                        (current) => !current
+                      )
+                    }
                     className="text-slate-500 transition hover:text-white"
                     aria-label={
-                      showPassword ? "Hide password" : "Show password"
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
                     }
                   >
                     {showPassword ? (
@@ -173,9 +340,13 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
+
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Minimum 6 characters with at least one
+                  uppercase and one lowercase letter.
+                </p>
               </div>
 
-              {/* Confirm Password */}
               <div>
                 <label
                   htmlFor="confirmPassword"
@@ -192,9 +363,15 @@ export default function RegisterPage() {
 
                   <input
                     id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
                     name="confirmPassword"
                     required
+                    minLength={6}
+                    autoComplete="new-password"
                     placeholder="Confirm your password"
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
@@ -202,7 +379,9 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() =>
-                      setShowConfirmPassword((current) => !current)
+                      setShowConfirmPassword(
+                        (current) => !current
+                      )
                     }
                     className="text-slate-500 transition hover:text-white"
                     aria-label={
@@ -220,7 +399,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Role Selection */}
               <div>
                 <p className="mb-2 text-sm font-medium text-slate-300">
                   Join as
@@ -252,10 +430,13 @@ export default function RegisterPage() {
                   </button>
                 </div>
 
-                <input type="hidden" name="role" value={role} />
+                <input
+                  type="hidden"
+                  name="role"
+                  value={role}
+                />
               </div>
 
-              {/* Terms */}
               <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-slate-400">
                 <input
                   type="checkbox"
@@ -275,13 +456,25 @@ export default function RegisterPage() {
                 </span>
               </label>
 
-              {/* Submit */}
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90"
+                disabled={isSubmitting}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Create Account
-                <ArrowRight size={17} />
+                {isSubmitting ? (
+                  <>
+                    <Loader2
+                      size={17}
+                      className="animate-spin"
+                    />
+                    Creating Account...
+                  </>
+                ) : (
+                  <>
+                    Create Account
+                    <ArrowRight size={17} />
+                  </>
+                )}
               </button>
             </form>
 
@@ -297,7 +490,6 @@ export default function RegisterPage() {
           </div>
         </section>
 
-        {/* Right Side - Artwork */}
         <section className="relative hidden min-h-[860px] overflow-hidden bg-[#050b14] lg:block">
           <Image
             src={REGISTER_IMAGE}
@@ -320,8 +512,8 @@ export default function RegisterPage() {
             </h2>
 
             <p className="mt-4 max-w-md text-sm leading-6 text-slate-200">
-              Whether you create or collect, ArtHub gives you a place to
-              discover, connect, and grow.
+              Whether you create or collect, ArtHub gives
+              you a place to discover, connect, and grow.
             </p>
           </div>
         </section>

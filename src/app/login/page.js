@@ -8,10 +8,12 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
+  Loader2,
   LockKeyhole,
   Mail,
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 import { authClient } from "@/lib/auth-client";
 
@@ -20,43 +22,75 @@ const LOGIN_IMAGE = "/login-image.png";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [isLoading, setIsLoading] =
+    useState(false);
+
+  const [isGoogleLoading, setIsGoogleLoading] =
+    useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    setErrorMessage("");
-    setIsLoading(true);
+    const formData =
+      new FormData(event.currentTarget);
 
-    const formData = new FormData(event.currentTarget);
+    const email = String(
+      formData.get("email") || ""
+    )
+      .trim()
+      .toLowerCase();
 
-    const email = formData.get("email");
-    const password = formData.get("password");
+    const password = String(
+      formData.get("password") || ""
+    );
+
+    if (!email || !password) {
+      toast.error(
+        "Please enter your email and password."
+      );
+      return;
+    }
 
     try {
-      const { data, error } = await authClient.signIn.email({
-        email,
-        password,
-      });
+      setIsLoading(true);
+
+      const { data, error } =
+        await authClient.signIn.email({
+          email,
+          password,
+        });
 
       if (error) {
-        setErrorMessage(
-          error.message || "Unable to sign in. Please check your details."
+        throw new Error(
+          error.message ||
+            "Unable to sign in."
         );
-        return;
       }
 
-      if (data) {
-        router.push("/dashboard");
-        router.refresh();
+      if (!data) {
+        throw new Error(
+          "Sign in did not complete."
+        );
       }
+
+      toast.success(
+        "Signed in successfully."
+      );
+
+      router.push("/dashboard");
+      router.refresh();
     } catch (error) {
-      console.error("Login error:", error);
+      console.error(
+        "Login error:",
+        error
+      );
 
-      setErrorMessage(
-        "Something went wrong while signing in. Please try again."
+      toast.error(
+        error.message ||
+          "Unable to sign in. Please check your details."
       );
     } finally {
       setIsLoading(false);
@@ -64,29 +98,50 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    setErrorMessage("");
-
     try {
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "http://localhost:3000/dashboard",
-      });
-    } catch (error) {
-      console.error("Google login error:", error);
+      setIsGoogleLoading(true);
 
-      setErrorMessage(
-        "Google sign in could not be started. Please try again."
+      const callbackURL =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/dashboard`
+          : "/dashboard";
+
+      const { error } =
+        await authClient.signIn.social({
+          provider: "google",
+          callbackURL,
+        });
+
+      if (error) {
+        throw new Error(
+          error.message ||
+            "Google sign in could not be started."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Google login error:",
+        error
       );
+
+      toast.error(
+        error.message ||
+          "Google sign in could not be started."
+      );
+
+      setIsGoogleLoading(false);
     }
   };
 
   return (
     <main className="min-h-screen bg-[#07111f] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b1625] shadow-[0_30px_90px_rgba(0,0,0,0.32)] lg:min-h-[720px] lg:grid-cols-[0.9fr_1.1fr]">
-        {/* Left Side */}
         <section className="flex items-center px-6 py-10 sm:px-10 lg:px-14">
           <div className="mx-auto w-full max-w-md">
-            <Link href="/" className="inline-flex items-center">
+            <Link
+              href="/"
+              className="inline-flex items-center"
+            >
               <Image
                 src="/arthub-logo-nav.png"
                 alt="ArtHub"
@@ -107,22 +162,32 @@ export default function LoginPage() {
               </h1>
 
               <p className="mt-4 text-sm leading-6 text-slate-400">
-                Continue discovering original artwork, managing your collection,
-                and connecting with independent artists.
+                Continue discovering original artwork,
+                managing your collection, and connecting
+                with independent artists.
               </p>
             </div>
 
-            {/* Google Login */}
             <button
               type="button"
               onClick={handleGoogleLogin}
-              className="mt-8 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.07]"
+              disabled={isGoogleLoading}
+              className="mt-8 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <FaGoogle size={17} />
-              Continue with Google
+              {isGoogleLoading ? (
+                <Loader2
+                  size={17}
+                  className="animate-spin"
+                />
+              ) : (
+                <FaGoogle size={17} />
+              )}
+
+              {isGoogleLoading
+                ? "Opening Google..."
+                : "Continue with Google"}
             </button>
 
-            {/* Divider */}
             <div className="my-7 flex items-center gap-4">
               <div className="h-px flex-1 bg-white/10" />
 
@@ -133,15 +198,10 @@ export default function LoginPage() {
               <div className="h-px flex-1 bg-white/10" />
             </div>
 
-            {/* Error Message */}
-            {errorMessage && (
-              <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                {errorMessage}
-              </div>
-            )}
-
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+            >
               <div>
                 <label
                   htmlFor="email"
@@ -151,13 +211,17 @@ export default function LoginPage() {
                 </label>
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
-                  <Mail size={18} className="shrink-0 text-slate-500" />
+                  <Mail
+                    size={18}
+                    className="shrink-0 text-slate-500"
+                  />
 
                   <input
                     id="email"
                     type="email"
                     name="email"
                     required
+                    autoComplete="email"
                     placeholder="you@example.com"
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
@@ -165,21 +229,12 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <label
-                    htmlFor="password"
-                    className="text-sm font-medium text-slate-300"
-                  >
-                    Password
-                  </label>
-
-                  <button
-                    type="button"
-                    className="text-xs font-medium text-[#F97316] transition hover:text-white"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
+                <label
+                  htmlFor="password"
+                  className="mb-2 block text-sm font-medium text-slate-300"
+                >
+                  Password
+                </label>
 
                 <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#081321] px-4 py-3.5 focus-within:border-[#F97316]/50">
                   <LockKeyhole
@@ -189,19 +244,30 @@ export default function LoginPage() {
 
                   <input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
                     name="password"
                     required
+                    autoComplete="current-password"
                     placeholder="Enter your password"
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
                   />
 
                   <button
                     type="button"
-                    onClick={() => setShowPassword((current) => !current)}
+                    onClick={() =>
+                      setShowPassword(
+                        (current) => !current
+                      )
+                    }
                     className="text-slate-500 transition hover:text-white"
                     aria-label={
-                      showPassword ? "Hide password" : "Show password"
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
                     }
                   >
                     {showPassword ? (
@@ -213,22 +279,25 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-400">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-[#F97316]"
-                />
-                Remember me
-              </label>
-
               <button
                 type="submit"
                 disabled={isLoading}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isLoading ? "Signing In..." : "Sign In"}
-
-                {!isLoading && <ArrowRight size={17} />}
+                {isLoading ? (
+                  <>
+                    <Loader2
+                      size={17}
+                      className="animate-spin"
+                    />
+                    Signing In...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight size={17} />
+                  </>
+                )}
               </button>
             </form>
 
@@ -244,7 +313,6 @@ export default function LoginPage() {
           </div>
         </section>
 
-        {/* Right Artwork Side */}
         <section className="relative hidden overflow-hidden bg-[#050b14] lg:block">
           <Image
             src={LOGIN_IMAGE}
@@ -267,8 +335,9 @@ export default function LoginPage() {
             </h2>
 
             <p className="mt-4 max-w-md text-sm leading-6 text-slate-200">
-              Discover original work from independent artists and build a
-              collection that feels personal.
+              Discover original work from independent
+              artists and build a collection that feels
+              personal.
             </p>
           </div>
         </section>
