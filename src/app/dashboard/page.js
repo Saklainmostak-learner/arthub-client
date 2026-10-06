@@ -9,6 +9,8 @@ import {
   Palette,
   Plus,
   ShoppingBag,
+  Store,
+  TrendingUp,
 } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
@@ -16,13 +18,17 @@ import { authClient } from "@/lib/auth-client";
 export default function DashboardPage() {
   const router = useRouter();
 
-  const [session, setSession] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] =
+    useState(null);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const { data } = await authClient.getSession();
+        const { data } =
+          await authClient.getSession();
 
         if (!data?.user) {
           router.push("/login");
@@ -31,7 +37,11 @@ export default function DashboardPage() {
 
         setSession(data);
       } catch (error) {
-        console.error("Failed to load session:", error);
+        console.error(
+          "Dashboard session error:",
+          error
+        );
+
         router.push("/login");
       } finally {
         setIsLoading(false);
@@ -43,14 +53,10 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#07111f] px-4 text-white">
-        <div className="flex items-center gap-3 text-slate-400">
-          <Loader2
-            size={20}
-            className="animate-spin text-[#F97316]"
-          />
-          Loading dashboard...
-        </div>
+      <main className="flex min-h-screen items-center justify-center bg-[#07111f]">
+        <Loader2
+          className="animate-spin text-[#F97316]"
+        />
       </main>
     );
   }
@@ -59,135 +65,183 @@ export default function DashboardPage() {
     return null;
   }
 
-  const user = session.user;
-  const isArtist = user.role === "artist";
+  const user =
+    session.user;
+
+  const isArtist =
+    user.role === "artist";
 
   return (
     <main className="min-h-screen bg-[#07111f] px-4 py-12 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-[2rem] border border-white/10 bg-[#0b1625] p-6 sm:p-8">
+        <div>
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#F97316]">
-            ArtHub Dashboard
+            {isArtist
+              ? "Artist Studio"
+              : "Collector Space"}
           </p>
 
-          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
-            Welcome, {user.name}
+          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+            Dashboard
           </h1>
 
-          <p className="mt-3 text-slate-400">
-            Signed in as{" "}
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
+            Welcome back,{" "}
             <span className="font-semibold text-white">
-              {isArtist ? "Artist" : "Art Collector"}
+              {user.name}
             </span>
+            .
+          </p>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-white/10 bg-[#0b1625] p-5">
+          <p className="text-sm text-slate-400">
+            Signed in as
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Browse Artworks */}
+          <p className="mt-1 font-semibold">
+            {user.name}
+          </p>
+
+          <p className="mt-1 text-sm text-slate-500">
+            {user.email}
+          </p>
+
+          <span className="mt-4 inline-flex rounded-full border border-[#F97316]/20 bg-[#F97316]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#F97316]">
+            {isArtist
+              ? "Artist"
+              : "Art Collector"}
+          </span>
+        </div>
+
+        {isArtist ? (
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <Link
               href="/artworks"
-              className="block cursor-pointer rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#F97316]/40 hover:bg-white/[0.07]"
+              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
-                <Palette size={21} />
-              </div>
+              <Palette
+                className="text-[#F97316]"
+              />
 
-              <h2 className="mt-4 text-lg font-semibold text-white">
+              <h2 className="mt-5 text-lg font-bold">
                 Browse Artworks
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                Discover original artwork from independent artists.
+                Explore artworks from the
+                ArtHub community.
               </p>
             </Link>
 
-            {isArtist ? (
-              <>
-                {/* Add Artwork */}
-                <Link
-                  href="/dashboard/add-artwork"
-                  className="block cursor-pointer rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#F97316]/40 hover:bg-white/[0.07]"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
-                    <Plus size={21} />
-                  </div>
+            <Link
+              href="/dashboard/add-artwork"
+              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
+            >
+              <Plus
+                className="text-[#F97316]"
+              />
 
-                  <h2 className="mt-4 text-lg font-semibold text-white">
-                    Add Artwork
-                  </h2>
+              <h2 className="mt-5 text-lg font-bold">
+                Add Artwork
+              </h2>
 
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
-                    Publish a new artwork to the ArtHub marketplace.
-                  </p>
-                </Link>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Publish a new original piece.
+              </p>
+            </Link>
 
-                {/* Manage Artworks */}
-                <Link
-                  href="/dashboard/my-artworks"
-                  className="block cursor-pointer rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#F97316]/40 hover:bg-white/[0.07]"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
-                    <Palette size={21} />
-                  </div>
+            <Link
+              href="/dashboard/my-artworks"
+              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
+            >
+              <Store
+                className="text-[#F97316]"
+              />
 
-                  <h2 className="mt-4 text-lg font-semibold text-white">
-                    Manage Artworks
-                  </h2>
+              <h2 className="mt-5 text-lg font-bold">
+                Manage Artworks
+              </h2>
 
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
-                    View, update, or remove your published artworks.
-                  </p>
-                </Link>
-              </>
-            ) : (
-              <>
-                {/* My Collection */}
-                <Link
-                  href="/dashboard/my-collection"
-                  className="block cursor-pointer rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#F97316]/40 hover:bg-white/[0.07]"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
-                    <ShoppingBag size={21} />
-                  </div>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Edit and manage your published
+                work.
+              </p>
+            </Link>
 
-                  <h2 className="mt-4 text-lg font-semibold text-white">
-                    My Collection
-                  </h2>
+            <Link
+              href="/dashboard/sales"
+              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-emerald-400/30"
+            >
+              <TrendingUp
+                className="text-emerald-400"
+              />
 
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
-                    View the original artworks you have purchased through
-                    ArtHub.
-                  </p>
+              <h2 className="mt-5 text-lg font-bold">
+                Sales History
+              </h2>
 
-                  <p className="mt-4 text-xs font-semibold text-[#F97316]">
-                    View Collection →
-                  </p>
-                </Link>
-
-                {/* My Favorites */}
-                <Link
-                  href="/dashboard/favorites"
-                  className="block cursor-pointer rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-pink-400/40 hover:bg-white/[0.07]"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-500/10 text-pink-400">
-                    <Heart size={21} />
-                  </div>
-
-                  <h2 className="mt-4 text-lg font-semibold text-white">
-                    My Favorites
-                  </h2>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
-                    Revisit the artworks you have saved to your favorites.
-                  </p>
-
-                  <p className="mt-4 text-xs font-semibold text-pink-400">
-                    View Favorites →
-                  </p>
-                </Link>
-              </>
-            )}
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Track sales, buyers, and
+                revenue.
+              </p>
+            </Link>
           </div>
-        </div>
+        ) : (
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <Link
+              href="/artworks"
+              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-[#F97316]/30"
+            >
+              <Palette
+                className="text-[#F97316]"
+              />
+
+              <h2 className="mt-5 text-lg font-bold">
+                Browse Artworks
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Discover original artwork from
+                independent artists.
+              </p>
+            </Link>
+
+            <Link
+              href="/dashboard/favorites"
+              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-pink-400/30"
+            >
+              <Heart
+                className="text-pink-400"
+              />
+
+              <h2 className="mt-5 text-lg font-bold">
+                My Favorites
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Revisit artwork you saved.
+              </p>
+            </Link>
+
+            <Link
+              href="/dashboard/my-collection"
+              className="rounded-2xl border border-white/10 bg-[#0d1928] p-6 transition hover:-translate-y-1 hover:border-emerald-400/30"
+            >
+              <ShoppingBag
+                className="text-emerald-400"
+              />
+
+              <h2 className="mt-5 text-lg font-bold">
+                My Collection
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                View artworks you purchased.
+              </p>
+            </Link>
+          </div>
+        )}
       </div>
     </main>
   );
