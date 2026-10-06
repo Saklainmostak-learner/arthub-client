@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ArtHub Client
 
-## Getting Started
+ArtHub is a modern online marketplace for original artworks where independent artists can publish and manage their work, and collectors can discover, save, and purchase unique pieces.
 
-First, run the development server:
+## Live Website
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Live URL: Add after deployment
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Purpose
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+The purpose of ArtHub is to create a simple and visually engaging platform that connects independent artists with art collectors.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Artists can publish and manage their artworks, while collectors can browse artworks, save favorites, purchase available pieces, and view their personal collection.
 
-## Learn More
+## Main Features
 
-To learn more about Next.js, take a look at the following resources:
+- Responsive modern art marketplace interface
+- Email and password authentication
+- Google authentication
+- Separate Artist and Art Collector roles
+- Browse all artworks
+- Search artworks by title or artist
+- Filter artworks by category
+- Filter artworks by minimum and maximum price
+- Sort artworks by newest and price
+- View artwork details
+- Save and remove favorite artworks
+- My Favorites dashboard
+- Stripe Checkout payment flow
+- My Collection for purchased artworks
+- Sold artwork indicators
+- Artist dashboard
+- Publish new artworks
+- Update unsold artworks
+- Delete unsold artworks
+- Sold artworks cannot be edited or deleted
+- Responsive navigation and dashboard
+- Loading, error, empty, and success states
+- Toast notifications
+- Custom confirmation modal
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## User Roles
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Art Collector
 
-## Deploy on Vercel
+Collectors can:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Browse artworks
+- View artwork details
+- Save artworks to favorites
+- Remove favorites
+- Purchase available artworks
+- View purchased artworks in My Collection
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Artist
+
+Artists can:
+
+- Publish artworks
+- View their own published artworks
+- Update unsold artworks
+- Delete unsold artworks
+- View sold status
+
+Artist accounts cannot purchase artworks.
+
+## Technologies Used
+
+- Next.js
+- React
+- Tailwind CSS
+- Better Auth
+- Stripe Checkout
+- Lucide React
+- React Hot Toast
+- MongoDB through the ArtHub backend API
+
+## NPM Packages
+
+Major packages used in the client include:
+
+```text
+next
+react
+react-dom
+better-auth
+lucide-react
+react-hot-toast
