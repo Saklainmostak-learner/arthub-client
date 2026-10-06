@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Heart,
   Loader2,
   Palette,
   Plus,
@@ -138,28 +139,52 @@ export default function DashboardPage() {
                 </Link>
               </>
             ) : (
-              /* My Collection */
-              <Link
-                href="/dashboard/my-collection"
-                className="block cursor-pointer rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#F97316]/40 hover:bg-white/[0.07]"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
-                  <ShoppingBag size={21} />
-                </div>
+              <>
+                {/* My Collection */}
+                <Link
+                  href="/dashboard/my-collection"
+                  className="block cursor-pointer rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#F97316]/40 hover:bg-white/[0.07]"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
+                    <ShoppingBag size={21} />
+                  </div>
 
-                <h2 className="mt-4 text-lg font-semibold text-white">
-                  My Collection
-                </h2>
+                  <h2 className="mt-4 text-lg font-semibold text-white">
+                    My Collection
+                  </h2>
 
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  View the original artworks you have purchased
-                  through ArtHub.
-                </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    View the original artworks you have purchased through
+                    ArtHub.
+                  </p>
 
-                <p className="mt-4 text-xs font-semibold text-[#F97316]">
-                  View Collection →
-                </p>
-              </Link>
+                  <p className="mt-4 text-xs font-semibold text-[#F97316]">
+                    View Collection →
+                  </p>
+                </Link>
+
+                {/* My Favorites */}
+                <Link
+                  href="/dashboard/favorites"
+                  className="block cursor-pointer rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition duration-300 hover:-translate-y-1 hover:border-pink-400/40 hover:bg-white/[0.07]"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-500/10 text-pink-400">
+                    <Heart size={21} />
+                  </div>
+
+                  <h2 className="mt-4 text-lg font-semibold text-white">
+                    My Favorites
+                  </h2>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    Revisit the artworks you have saved to your favorites.
+                  </p>
+
+                  <p className="mt-4 text-xs font-semibold text-pink-400">
+                    View Favorites →
+                  </p>
+                </Link>
+              </>
             )}
           </div>
         </div>
