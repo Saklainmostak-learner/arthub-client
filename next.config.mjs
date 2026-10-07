@@ -8,6 +8,21 @@ const nextConfig = {
       },
     ],
   },
+
+  async rewrites() {
+    return [
+      {
+        source: "/api/auth/:path*",
+        destination:
+          "https://arthub-server-k64r.onrender.com/api/auth/:path*",
+      },
+      {
+        source: "/api/backend/:path*",
+        destination:
+          "https://arthub-server-k64r.onrender.com/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
