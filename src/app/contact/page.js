@@ -1,10 +1,13 @@
 import {
   Clock3,
-  Github,
   Mail,
   MapPin,
   MessageCircle,
 } from "lucide-react";
+
+import {
+  FaGithub,
+} from "react-icons/fa6";
 
 export const metadata = {
   title: "Contact | ArtHub",
@@ -52,7 +55,7 @@ export default function ContactPage() {
 
             <div className="rounded-2xl border border-white/10 bg-[#0d1928] p-5">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F97316]/10 text-[#F97316]">
-                <Github size={20} />
+                <FaGithub size={20} />
               </div>
 
               <h2 className="mt-4 font-bold">
