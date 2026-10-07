@@ -23,19 +23,28 @@ const REGISTER_IMAGE = "/register-image.png";
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
+  const [showPassword, setShowPassword] =
     useState(false);
 
-  const [role, setRole] = useState("user");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [
+    showConfirmPassword,
+    setShowConfirmPassword,
+  ] = useState(false);
+
+  const [role, setRole] =
+    useState("user");
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
   const [isGoogleLoading, setIsGoogleLoading] =
     useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
+    const formData =
+      new FormData(event.currentTarget);
 
     const name = String(
       formData.get("name") || ""
@@ -56,12 +65,16 @@ export default function RegisterPage() {
     );
 
     if (!name) {
-      toast.error("Please enter your full name.");
+      toast.error(
+        "Please enter your full name."
+      );
       return;
     }
 
     if (!email) {
-      toast.error("Please enter your email.");
+      toast.error(
+        "Please enter your email."
+      );
       return;
     }
 
@@ -86,8 +99,12 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match.");
+    if (
+      password !== confirmPassword
+    ) {
+      toast.error(
+        "Passwords do not match."
+      );
       return;
     }
 
@@ -122,7 +139,10 @@ export default function RegisterPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
-      console.error("Register error:", error);
+      console.error(
+        "Register error:",
+        error
+      );
 
       toast.error(
         error.message ||
@@ -133,41 +153,37 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleRegister = async () => {
-    try {
-      setIsGoogleLoading(true);
+  const handleGoogleRegister =
+    async () => {
+      try {
+        setIsGoogleLoading(true);
 
-      const callbackURL =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/dashboard`
-          : "/dashboard";
+        const { error } =
+          await authClient.signIn.social({
+            provider: "google",
+            callbackURL: "/dashboard",
+          });
 
-      const { error } =
-        await authClient.signIn.social({
-          provider: "google",
-          callbackURL,
-        });
+        if (error) {
+          throw new Error(
+            error.message ||
+              "Google sign up could not be started."
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Google register error:",
+          error
+        );
 
-      if (error) {
-        throw new Error(
+        toast.error(
           error.message ||
             "Google sign up could not be started."
         );
+
+        setIsGoogleLoading(false);
       }
-    } catch (error) {
-      console.error(
-        "Google register error:",
-        error
-      );
-
-      toast.error(
-        error.message ||
-          "Google sign up could not be started."
-      );
-
-      setIsGoogleLoading(false);
-    }
-  };
+    };
 
   return (
     <main className="min-h-screen bg-[#07111f] px-4 py-12 sm:px-6 lg:px-8">
@@ -206,8 +222,12 @@ export default function RegisterPage() {
 
             <button
               type="button"
-              onClick={handleGoogleRegister}
-              disabled={isGoogleLoading}
+              onClick={
+                handleGoogleRegister
+              }
+              disabled={
+                isGoogleLoading
+              }
               className="mt-7 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isGoogleLoading ? (
@@ -216,7 +236,9 @@ export default function RegisterPage() {
                   className="animate-spin"
                 />
               ) : (
-                <FaGoogle size={17} />
+                <FaGoogle
+                  size={17}
+                />
               )}
 
               {isGoogleLoading
@@ -323,7 +345,8 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() =>
                       setShowPassword(
-                        (current) => !current
+                        (current) =>
+                          !current
                       )
                     }
                     className="text-slate-500 transition hover:text-white"
@@ -334,9 +357,13 @@ export default function RegisterPage() {
                     }
                   >
                     {showPassword ? (
-                      <EyeOff size={18} />
+                      <EyeOff
+                        size={18}
+                      />
                     ) : (
-                      <Eye size={18} />
+                      <Eye
+                        size={18}
+                      />
                     )}
                   </button>
                 </div>
@@ -380,7 +407,8 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() =>
                       setShowConfirmPassword(
-                        (current) => !current
+                        (current) =>
+                          !current
                       )
                     }
                     className="text-slate-500 transition hover:text-white"
@@ -391,9 +419,13 @@ export default function RegisterPage() {
                     }
                   >
                     {showConfirmPassword ? (
-                      <EyeOff size={18} />
+                      <EyeOff
+                        size={18}
+                      />
                     ) : (
-                      <Eye size={18} />
+                      <Eye
+                        size={18}
+                      />
                     )}
                   </button>
                 </div>
@@ -407,7 +439,9 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setRole("user")}
+                    onClick={() =>
+                      setRole("user")
+                    }
                     className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                       role === "user"
                         ? "border-[#F97316]/50 bg-[#F97316]/10 text-[#F97316]"
@@ -419,7 +453,9 @@ export default function RegisterPage() {
 
                   <button
                     type="button"
-                    onClick={() => setRole("artist")}
+                    onClick={() =>
+                      setRole("artist")
+                    }
                     className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                       role === "artist"
                         ? "border-[#F97316]/50 bg-[#F97316]/10 text-[#F97316]"
@@ -458,7 +494,9 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting
+                }
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? (
@@ -472,7 +510,9 @@ export default function RegisterPage() {
                 ) : (
                   <>
                     Create Account
-                    <ArrowRight size={17} />
+                    <ArrowRight
+                      size={17}
+                    />
                   </>
                 )}
               </button>

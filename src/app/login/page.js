@@ -101,15 +101,10 @@ export default function LoginPage() {
     try {
       setIsGoogleLoading(true);
 
-      const callbackURL =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/dashboard`
-          : "/dashboard";
-
       const { error } =
         await authClient.signIn.social({
           provider: "google",
-          callbackURL,
+          callbackURL: "/dashboard",
         });
 
       if (error) {
