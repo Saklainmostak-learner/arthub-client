@@ -1,148 +1,134 @@
-# ArtHub Server
+# ArtHub Client
 
-ArtHub Server is the backend API for ArtHub, a full-stack online marketplace for original artworks.
+ArtHub is a modern full-stack online marketplace for original artworks where collectors can discover and purchase art, artists can publish and manage their work, and administrators can manage the platform.
 
-The backend handles authentication, authorization, artwork management, favorites, artwork purchases, Stripe payments, verified reviews, artist sales tracking, subscriptions, admin management, and MongoDB data storage.
+This repository contains the frontend application for ArtHub, built with Next.js, React, Tailwind CSS, Better Auth, Stripe integration, and responsive UI components.
 
-## Live API
+---
 
-https://arthub-server-k64r.onrender.com
+## Live Website
+
+https://arthub-client-sigma.vercel.app
+
+---
 
 ## GitHub Repositories
 
-**Server Repository:**  
-https://github.com/Saklainmostak-learner/arthub-server
-
 **Client Repository:**  
 https://github.com/Saklainmostak-learner/arthub-client
+
+**Server Repository:**  
+https://github.com/Saklainmostak-learner/arthub-server
 
 ---
 
 ## Project Purpose
 
-The purpose of the ArtHub backend is to provide a secure API for the ArtHub marketplace.
+The purpose of ArtHub is to create a complete online artwork marketplace where:
 
-The server manages user authentication, role-based authorization, artworks, purchases, reviews, favorites, subscriptions, admin operations, and MongoDB database communication.
+- Collectors can discover original artworks
+- Users can save favorite artworks
+- Collectors can purchase artworks securely
+- Verified buyers can leave reviews
+- Artists can publish and manage their own artworks
+- Artists can track sales and revenue
+- Users can subscribe to membership plans
+- Administrators can manage users, artworks, transactions, and platform statistics
 
 ---
 
 ## Main Features
 
-- Better Auth authentication
+- Responsive modern user interface
 - Email and password authentication
-- Google OAuth
-- Cookie-based sessions
-- Collector role
-- Artist role
-- Admin role
-- Role-based authorization
-- Protected API routes
-- Artwork CRUD operations
-- Artwork ownership validation
-- Sold artwork protection
+- Google OAuth authentication
+- Better Auth session management
+- Collector, Artist, and Admin roles
+- Role-based dashboard
+- Browse artworks
+- Artwork search and filtering
+- Category filtering
+- Price filtering
+- Artwork sorting
+- Pagination
+- Artwork details page
+- Add artwork
+- Edit artwork
+- Delete artwork
+- Artist ownership protection
+- Sold artwork status
 - Favorites system
+- My Favorites page
 - Stripe artwork checkout
-- Stripe payment confirmation
-- Purchase history
-- Duplicate purchase protection
+- Artwork purchase confirmation
+- My Collection
 - Verified buyer reviews
-- Review ownership protection
+- 1–5 star ratings
+- Edit own reviews
+- Delete own reviews
 - Artist sales history
 - Artist revenue statistics
+- Membership pricing page
+- Free membership
+- Pro membership
+- Premium membership
+- Stripe subscription checkout
+- Subscription cancellation
+- Admin dashboard
 - Admin platform statistics
 - Admin user management
 - Admin role management
 - Admin artwork management
-- Platform transaction management
-- Stripe membership subscriptions
-- Free, Pro, and Premium membership system
-- Subscription confirmation
-- Subscription cancellation
-- MongoDB Atlas integration
-- Environment-based configuration
-- CORS configuration
-- API 404 handling
+- Admin transaction management
+- About page
+- Contact page
+- Privacy page
+- Custom 404 page
+- Toast notifications
+- Responsive mobile navigation
 
 ---
 
 ## Technology Stack
 
-- Node.js
-- Express.js
-- MongoDB
+- Next.js
+- React
+- JavaScript
+- Tailwind CSS
 - Better Auth
-- Better Auth MongoDB Adapter
 - Stripe
-- CORS
-- dotenv
+- Axios
+- Lucide React
+- React Icons
+- React Hot Toast
+- Recharts
 
 ---
 
 ## Major NPM Packages
 
 ```text
-express
-mongodb
+next
+react
+react-dom
 better-auth
-@better-auth/mongo-adapter
-stripe
-cors
-dotenv
-nodemon
-```
-
----
-
-## Database
-
-ArtHub uses MongoDB Atlas.
-
-**Database Name:**
-
-```text
-arthubDB
-```
-
-Main collections include:
-
-```text
-user
-account
-session
-verification
-artworks
-favorites
-purchases
-comments
-subscriptions
-```
-
----
-
-## Authentication
-
-Authentication is handled by Better Auth.
-
-Supported authentication methods:
-
-- Email and password
-- Google OAuth
-
-Better Auth API base route:
-
-```text
-/api/auth
+axios
+lucide-react
+react-icons
+react-hot-toast
+recharts
+tailwindcss
 ```
 
 ---
 
 ## User Roles
 
-ArtHub supports three main roles.
+ArtHub supports three user roles.
 
 ### Collector
 
-Role value:
+Collector role value:
 
 ```text
 user
@@ -150,18 +136,22 @@ user
 
 Collectors can:
 
-- Save favorites
-- Remove favorites
-- Purchase artworks
-- View purchase history
-- Submit verified reviews
+- Browse artworks
+- View artwork details
+- Save favorite artworks
+- Remove favorite artworks
+- Purchase available artworks
+- View purchased artworks
+- Submit reviews after verified purchases
 - Edit their own reviews
 - Delete their own reviews
-- Subscribe to membership plans
+- Subscribe to paid membership plans
+
+---
 
 ### Artist
 
-Role value:
+Artist role value:
 
 ```text
 artist
@@ -169,20 +159,23 @@ artist
 
 Artists can:
 
-- Create artworks
+- Browse artworks
+- Add new artworks
 - View their own artworks
-- Update their own unsold artworks
+- Edit their own unsold artworks
 - Delete their own unsold artworks
 - View sold artwork status
-- View their own sales history
-- View revenue information
-- Subscribe to membership plans
+- View sales history
+- View revenue statistics
+- Subscribe to paid membership plans
 
 Artists cannot purchase their own artworks.
 
+---
+
 ### Admin
 
-Role value:
+Admin role value:
 
 ```text
 admin
@@ -193,290 +186,268 @@ Administrators can:
 - View platform statistics
 - View all users
 - Change user roles
-- Promote users to Artist or Admin
+- Promote users
 - Delete users
 - View all artworks
 - Delete artworks
-- View platform transactions
+- View transactions
+- Monitor platform activity
 
-The currently authenticated administrator cannot remove its own admin role or delete its own account.
-
----
-
-## API Overview
-
-### Health Route
-
-```http
-GET /
-```
-
-Returns server status information.
-
-### Authentication Routes
-
-Base route:
-
-```text
-/api/auth
-```
-
-Better Auth handles:
-
-- Registration
-- Login
-- Logout
-- Session management
-- Google authentication
+The currently authenticated administrator is protected from removing their own admin role or deleting their own account.
 
 ---
 
-## Artwork Routes
+## Authentication
 
-Base route:
+Authentication is handled using Better Auth.
+
+Supported authentication methods:
+
+- Email and password
+- Google OAuth
+
+Production authentication requests are proxied through the Next.js frontend to the deployed backend.
+
+---
+
+## Main Routes
+
+### Public Routes
 
 ```text
+/
+/about
 /artworks
+/artworks/[id]
+/contact
+/login
+/register
+/pricing
+/privacy
 ```
 
-Available operations include:
+### Dashboard Routes
 
-```http
-GET    /artworks
-GET    /artworks/:id
-POST   /artworks
-PUT    /artworks/:id
-DELETE /artworks/:id
+```text
+/dashboard
+/dashboard/add-artwork
+/dashboard/admin
+/dashboard/favorites
+/dashboard/my-artworks
+/dashboard/my-artworks/[id]/edit
+/dashboard/my-collection
+/dashboard/sales
 ```
 
-Artwork routes support:
+### Payment Routes
 
-- Artwork creation
-- Artwork retrieval
-- Artwork update
-- Artwork deletion
-- Artist ownership validation
-- Sold artwork protection
+```text
+/payment-success
+/subscription-success
+```
 
 ---
 
-## Favorite Routes
+## Home Page
 
-Base route:
+The home page includes:
 
-```text
-/favorites
-```
+- Hero section
+- Featured artworks
+- Art categories
+- Top artists
+- Navigation bar
+- Footer
 
-Available operations include:
-
-```http
-GET    /favorites/:email
-POST   /favorites
-DELETE /favorites/:artworkId/:email
-```
-
-Favorites are restricted to authenticated collector accounts.
-
-Users can access and manage only their own favorite records.
+Featured artwork information is loaded from the backend database.
 
 ---
 
-## Purchase Routes
+## Artwork Marketplace
 
-Base route:
+The Browse Artworks page supports:
 
-```text
-/purchases
-```
+- Artwork listing
+- Search by artwork information
+- Category filtering
+- Minimum price filtering
+- Maximum price filtering
+- Sorting
+- Pagination
+- Sold artwork status
 
-Available operations include:
-
-```http
-POST /purchases/create-checkout-session
-POST /purchases/confirm-payment
-GET  /purchases/buyer/:email
-GET  /purchases/artist/:email
-```
-
-Purchase functionality includes:
-
-- Stripe Checkout
-- Authenticated collector validation
-- Buyer identity verification
-- Artist self-purchase prevention
-- Artwork sold protection
-- Duplicate purchase protection
-- Purchase history
-- Artist sales history
-- Revenue tracking
+Each artwork links to a dedicated details page.
 
 ---
 
-## Review Routes
+## Artwork Details
 
-Base route:
+The artwork details page includes:
 
-```text
-/comments
-```
+- Artwork image
+- Artwork title
+- Artist information
+- Category
+- Price
+- Description
+- Availability status
+- Favorite functionality
+- Purchase functionality
+- Reviews
+- Average rating
 
-Available operations include:
-
-```http
-GET    /comments/artwork/:artworkId
-POST   /comments
-PUT    /comments/:id
-DELETE /comments/:id
-```
-
-Review functionality includes:
-
-- Public review viewing
-- Verified purchase validation
-- 1–5 star rating validation
-- Review ownership validation
-- Review update
-- Review deletion
-
-Only verified buyers can submit reviews.
-
-Users can update or delete only their own reviews.
+Purchased artworks are marked as sold.
 
 ---
 
-## Subscription Routes
+## Artist Dashboard
 
-Base route:
+Artists can access tools for managing their marketplace activity.
 
-```text
-/subscriptions
-```
-
-Available operations include:
-
-```http
-GET  /subscriptions/plans
-GET  /subscriptions/me
-POST /subscriptions/create-checkout-session
-POST /subscriptions/confirm
-POST /subscriptions/cancel
-```
-
-Supported membership plans:
+Artist features include:
 
 ```text
-free
-pro
-premium
+/dashboard/add-artwork
+/dashboard/my-artworks
+/dashboard/sales
 ```
 
-Stripe Checkout is used for paid memberships.
+Artists can create, update, and delete their own unsold artworks.
 
-Subscription information is stored in MongoDB.
+Sold artworks cannot be modified or deleted by the artist.
 
 ---
 
-## Admin Routes
+## Collector Dashboard
 
-Base route:
+Collectors can access:
 
 ```text
-/admin
+/dashboard/favorites
+/dashboard/my-collection
 ```
 
-Admin-only operations include:
-
-```http
-GET    /admin/stats
-GET    /admin/users
-PATCH  /admin/users/:id/role
-DELETE /admin/users/:id
-GET    /admin/artworks
-DELETE /admin/artworks/:id
-GET    /admin/transactions
-```
-
-All admin routes require:
-
-- A valid authenticated session
-- Admin role authorization
-
-Admin security includes:
-
-- Self-role-removal protection
-- Self-account-deletion protection
+Collectors can save favorite artworks and view artworks they have purchased.
 
 ---
 
-## Artist Sales
+## Reviews
 
-Artists can access their own sales information through:
+Only verified buyers can submit reviews for purchased artworks.
 
-```http
-GET /purchases/artist/:email
+Review features include:
+
+- 1–5 star rating
+- Review text
+- Verified Buyer status
+- Edit own review
+- Delete own review
+
+Users cannot edit or delete reviews created by other users.
+
+---
+
+## Stripe Artwork Payments
+
+Stripe Checkout is used for artwork purchases.
+
+The purchase flow includes:
+
+1. Collector opens an available artwork
+2. Collector starts Stripe Checkout
+3. Payment is completed through Stripe
+4. ArtHub verifies the Stripe Checkout session
+5. Purchase information is stored
+6. Artwork is marked as sold
+7. Purchased artwork appears in My Collection
+
+---
+
+## Membership Plans
+
+ArtHub currently supports:
+
+### Free
+
+```text
+$0
 ```
 
-The API provides:
+### Pro
 
-- Total sales
-- Total revenue
-- Average sale value
-- Individual sales
-- Buyer information
-- Sale amount
-- Sale date
+```text
+$9 / month
+```
 
-Artists cannot access another artist's sales information.
+### Premium
+
+```text
+$19 / month
+```
+
+Paid memberships use Stripe subscription checkout.
+
+Users can also cancel a paid membership and return to the Free plan.
+
+---
+
+## Admin Dashboard
+
+Admin dashboard route:
+
+```text
+/dashboard/admin
+```
+
+Admin features include:
+
+- Platform statistics
+- User count
+- Artist count
+- Collector count
+- Admin count
+- Artwork count
+- Sold artwork count
+- Transaction count
+- Revenue information
+- User management
+- Role management
+- Artwork management
+- Transaction history
+
+Admin credentials should be provided separately during assignment evaluation.
 
 ---
 
 ## Environment Variables
 
-Create a `.env` file in the server root.
+Create a `.env.local` file in the client root for local development.
 
-### Local Development Example
-
-```env
-PORT=5000
-
-CLIENT_URL=http://localhost:3000
-
-MONGODB_URI=your_mongodb_connection_string
-DB_NAME=arthubDB
-
-BETTER_AUTH_SECRET=your_better_auth_secret
-BETTER_AUTH_URL=http://localhost:5000
-
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-STRIPE_SECRET_KEY=your_stripe_test_secret_key
-```
-
-### Production Example
+Example:
 
 ```env
-CLIENT_URL=https://arthub-client-sigma.vercel.app
-BETTER_AUTH_URL=https://arthub-server-k64r.onrender.com
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_AUTH_URL=http://localhost:5000
 ```
 
-Never commit real secret values to GitHub.
+Do not commit real environment configuration files to GitHub.
+
+The production frontend uses a Next.js proxy for authentication and backend API requests.
 
 ---
 
 ## Install and Run Locally
 
-Clone the server repository:
+Clone the client repository:
 
 ```bash
-git clone https://github.com/Saklainmostak-learner/arthub-server.git
+git clone https://github.com/Saklainmostak-learner/arthub-client.git
 ```
 
-Enter the project:
+Enter the project directory:
 
 ```bash
-cd arthub-server
+cd arthub-client
 ```
 
 Install dependencies:
@@ -485,47 +456,67 @@ Install dependencies:
 npm install
 ```
 
-Create a `.env` file in the project root.
-
 Start the development server:
 
 ```bash
 npm run dev
 ```
 
-Or start the production server:
-
-```bash
-npm start
-```
-
-The API will run locally at:
+Open:
 
 ```text
-http://localhost:5000
+http://localhost:3000
 ```
 
 ---
 
 ## Available Scripts
 
-### Development Server
+### Development
 
 ```bash
 npm run dev
 ```
 
-### Production Server
+### Production Build
+
+```bash
+npm run build
+```
+
+### Start Production Server
 
 ```bash
 npm start
 ```
 
-This Express server does not require a separate frontend-style production build command.
+### Lint
+
+```bash
+npm run lint
+```
+
+---
+
+## Production Build
+
+The application has been successfully tested with:
+
+```bash
+npm run build
+```
+
+Next.js generates all required public and dashboard routes successfully.
 
 ---
 
 ## Deployment
+
+The frontend is deployed on Vercel.
+
+**Production Website:**
+
+https://arthub-client-sigma.vercel.app
 
 The backend is deployed on Render.
 
@@ -533,94 +524,58 @@ The backend is deployed on Render.
 
 https://arthub-server-k64r.onrender.com
 
-The Render server communicates with:
-
-- MongoDB Atlas
-- Better Auth
-- Stripe
-- Vercel frontend
-
----
-
-## CORS
-
-CORS is configured using the frontend URL stored in:
-
-```env
-CLIENT_URL
-```
-
-Credentials are enabled so Better Auth session cookies can be used between the client and server.
-
 ---
 
 ## Security
 
-The ArtHub backend includes:
+ArtHub includes:
 
-- Authenticated protected routes
-- Role-based authorization
-- Artist ownership checks
-- Collector-only operations
-- Admin-only operations
-- Artwork sold protection
-- Duplicate purchase protection
-- Buyer identity validation
-- Verified purchase checks
-- Review ownership checks
+- Better Auth session authentication
+- Secure authentication cookies
+- Role-based access control
+- Protected backend APIs
+- Artist ownership validation
+- Collector-only purchase operations
+- Admin-only management APIs
+- Verified buyer review protection
 - User-specific favorites
-- User-specific purchase history
-- Artist-specific sales history
-- Protected active administrator account
-- Environment-based secrets
+- User-specific collection data
+- Sold artwork protection
+- Secure environment variables
+- Server-side role validation
+- Protected admin account operations
 
 ---
 
-## Stripe
+## Responsive Design
 
-Stripe test mode is used for:
+The application is designed for:
 
-- Artwork purchases
-- Pro membership subscriptions
-- Premium membership subscriptions
+- Mobile devices
+- Tablets
+- Laptops
+- Desktop screens
 
-Stripe secret keys are stored only in server environment variables.
-
-No Stripe secret key is exposed in the client application.
-
----
-
-## Admin Access
-
-The administrator account is created as a normal account first and then assigned the `admin` role in the database or by an existing administrator.
-
-Public users cannot register themselves directly as administrators.
-
-The Admin Dashboard is available from the client at:
-
-```text
-/dashboard/admin
-```
-
-Evaluation credentials should be provided separately in the assignment submission.
+Navigation, dashboards, forms, cards, and marketplace sections adapt to different screen sizes.
 
 ---
 
 ## Project Status
 
-ArtHub Server supports the complete backend workflow for:
+ArtHub currently includes the complete core workflow for:
 
 - Collectors
 - Artists
 - Administrators
-- Artwork CRUD
+- Artwork discovery
+- Artwork management
 - Favorites
-- Stripe artwork payments
-- Purchase history
-- Verified reviews
-- Artist sales
-- Platform administration
+- Stripe payments
+- Purchases
+- Reviews
+- Sales tracking
 - Membership subscriptions
-- Role-based authorization
+- Admin management
+- Responsive user experience
 
-The backend is built using Node.js, Express, MongoDB, Better Auth, and Stripe.
+The project is built with Next.js, React, Tailwind CSS, Better Auth, MongoDB-backed APIs, and Stripe.
