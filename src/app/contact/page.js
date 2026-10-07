@@ -127,11 +127,11 @@ export default function ContactPage() {
                 href="mailto:naimmahamudulhassan@gmail.com"
                 className="mt-2 block break-all text-lg font-semibold text-white transition hover:text-[#F97316]"
               >
-                naimmahamudulhassan@gmail.com
+                saqlainmustaksaqi1@gmail.com
               </a>
 
               <a
-                href="mailto:naimmahamudulhassan@gmail.com?subject=ArtHub%20Support"
+                href="mailto:saqlainmustaksaqi1@gmail.com?subject=ArtHub%20Support"
                 className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#8B5CF6] via-[#EC4899] to-[#F97316] px-5 py-3.5 text-sm font-semibold text-white transition hover:opacity-90"
               >
                 <Mail size={17} />
